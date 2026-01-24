@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LocalStorage zurücksetzen</title>
+</head>
+<body>
+    <h1>LocalStorage zurücksetzen</h1>
+    <button onclick="reset()">Alle gespeicherten Rezeptdaten löschen</button>
+    <p id="status"></p>
+
+    <script>
+        function reset() {
+            // Alte Keys
+            for (let i = 1; i <= 10; i++) {
+                localStorage.removeItem(`wurst_rezept_${i}_schritte`);
+                localStorage.removeItem(`wurst_rezept_${i}_fleischmengen`);
+            }
+            // Neue Keys (v2)
+            for (let i = 1; i <= 10; i++) {
+                localStorage.removeItem(`wurst_rezept_v2_${i}_schritte`);
+                localStorage.removeItem(`wurst_rezept_v2_${i}_fleischmengen`);
+            }
+            document.getElementById('status').textContent = 'Alle Daten gelöscht! Seite neu laden.';
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

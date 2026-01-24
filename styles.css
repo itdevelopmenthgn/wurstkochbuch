@@ -1,0 +1,569 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    /* Rustikale Farben */
+    --primary-color: #8B4513; /* Sattelbraun */
+    --secondary-color: #A0522D; /* Sienna */
+    --accent-color: #D2691E; /* Schokolade */
+    --bg-color: #F5DEB3; /* Weizen/Pergament */
+    --card-bg: #FFF8DC; /* Cornsilk */
+    --text-color: #3E2723; /* Dunkelbraun */
+    --text-muted: #6D4C41;
+    --border-color: #A0522D;
+    --success-color: #558B2F; /* Olivgrün */
+    --completed-bg: #E8D5B7;
+    --header-bg: #5D4037; /* Dunkles Holz */
+}
+
+body {
+    font-family: 'Georgia', 'Times New Roman', serif;
+    background-color: var(--bg-color);
+    background-image:
+        repeating-linear-gradient(
+            90deg,
+            transparent,
+            transparent 2px,
+            rgba(139, 69, 19, 0.03) 2px,
+            rgba(139, 69, 19, 0.03) 4px
+        );
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+header {
+    background: linear-gradient(135deg, var(--header-bg), var(--primary-color));
+    color: #FFF8DC;
+    padding: 2rem 1rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border-bottom: 4px solid var(--accent-color);
+}
+
+.header-content {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+header h1 {
+    font-size: 2.8rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.subtitle {
+    font-style: italic;
+    font-size: 1.2rem;
+    opacity: 0.9;
+    margin-top: 0.5rem;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+nav button {
+    background-color: rgba(255, 248, 220, 0.2);
+    color: #FFF8DC;
+    border: 2px solid #FFF8DC;
+    padding: 0.7rem 1.8rem;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-family: Georgia, serif;
+    transition: all 0.3s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+nav button:hover {
+    background-color: var(--accent-color);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+nav button.active {
+    background-color: var(--accent-color);
+    color: white;
+    border-color: var(--accent-color);
+}
+
+.back-link {
+    display: inline-block;
+    color: #FFF8DC;
+    text-decoration: none;
+    padding: 0.6rem 1.2rem;
+    background-color: rgba(255, 248, 220, 0.2);
+    border-radius: 5px;
+    margin-top: 1rem;
+    border: 2px solid #FFF8DC;
+    transition: all 0.3s;
+    font-family: Georgia, serif;
+}
+
+.back-link:hover {
+    background-color: var(--accent-color);
+    transform: translateX(-3px);
+}
+
+main {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* Rezept-Karten auf der Übersicht */
+.rezept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 2rem;
+}
+
+.rezept-karte {
+    background-color: var(--card-bg);
+    border-radius: 8px;
+    padding: 1.8rem;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 2px solid var(--border-color);
+    position: relative;
+}
+
+.rezept-karte::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 8px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 8px 8px 0 0;
+}
+
+.rezept-karte:hover {
+    transform: translateY(-8px) rotate(1deg);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.3);
+}
+
+.rezept-karte h2 {
+    color: var(--primary-color);
+    margin-bottom: 0.8rem;
+    margin-top: 0.5rem;
+    font-size: 1.6rem;
+    font-weight: bold;
+}
+
+.rezept-karte .meta {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    flex-wrap: wrap;
+}
+
+.rezept-karte .kategorie {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: #FFF8DC;
+    padding: 0.4rem 1rem;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    margin-top: 0.8rem;
+    font-weight: bold;
+}
+
+/* Rezept-Detail-Seite */
+#rezeptDetail {
+    background-color: var(--card-bg);
+    border-radius: 10px;
+    padding: 2.5rem;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    border: 3px solid var(--border-color);
+}
+
+#rezeptDetail h1 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-size: 2.8rem;
+    border-bottom: 3px solid var(--accent-color);
+    padding-bottom: 0.5rem;
+}
+
+.rezept-meta {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.rezept-meta div {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Fleischmengen-Steuerung */
+.fleisch-steuerung-container {
+    background-color: rgba(139, 69, 19, 0.1);
+    padding: 1.5rem;
+    border-radius: 10px;
+    border: 2px solid var(--border-color);
+    margin-bottom: 2rem;
+}
+
+.fleisch-steuerung-container h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+.fleisch-input-gruppe {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.fleisch-input-gruppe label {
+    font-weight: bold;
+    min-width: 150px;
+    color: var(--text-color);
+}
+
+.fleisch-input {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background-color: white;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    border: 2px solid var(--primary-color);
+}
+
+.fleisch-input button {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 5px;
+    font-size: 1.3rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.fleisch-input button:hover {
+    background-color: var(--accent-color);
+    transform: scale(1.1);
+}
+
+.fleisch-input button:active {
+    transform: scale(0.95);
+}
+
+.fleisch-anzahl {
+    font-size: 1.4rem;
+    font-weight: bold;
+    min-width: 80px;
+    text-align: center;
+    color: var(--primary-color);
+}
+
+/* Zutaten-Liste */
+.zutaten-section {
+    margin: 2rem 0;
+    padding: 2rem;
+    background-color: #FFF;
+    border-radius: 10px;
+    border: 3px solid var(--primary-color);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.zutaten-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-size: 2rem;
+}
+
+.zutaten-kategorie {
+    margin-bottom: 2rem;
+}
+
+.zutaten-kategorie h3 {
+    color: var(--secondary-color);
+    margin-bottom: 0.8rem;
+    font-size: 1.4rem;
+    border-bottom: 2px solid var(--accent-color);
+    padding-bottom: 0.3rem;
+}
+
+.zutaten-kategorie ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.zutaten-kategorie li {
+    padding: 0.6rem 0;
+    padding-left: 2rem;
+    position: relative;
+    font-size: 1.05rem;
+}
+
+.zutaten-kategorie li:before {
+    content: "▸";
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Schritte-Section */
+.schritte-section {
+    margin: 2rem 0;
+}
+
+.schritte-section h2 {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-size: 2.2rem;
+}
+
+.schritt-gruppe {
+    margin-bottom: 2.5rem;
+}
+
+.schritt-gruppe h3 {
+    color: var(--secondary-color);
+    margin-bottom: 1.2rem;
+    font-size: 1.6rem;
+    border-left: 5px solid var(--accent-color);
+    padding-left: 1rem;
+}
+
+.schritt {
+    background-color: white;
+    border-radius: 8px;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+    overflow: hidden;
+    transition: all 0.3s;
+    border: 2px solid var(--border-color);
+}
+
+.schritt.completed {
+    background-color: var(--completed-bg);
+    opacity: 0.8;
+}
+
+.schritt.collapsed .schritt-inhalt {
+    display: none;
+}
+
+.schritt-header {
+    display: flex;
+    align-items: center;
+    padding: 1.2rem 1.8rem;
+    cursor: pointer;
+    gap: 1rem;
+    user-select: none;
+}
+
+.schritt-header:hover {
+    background-color: rgba(139, 69, 19, 0.05);
+}
+
+.schritt.completed .schritt-header {
+    background-color: var(--completed-bg);
+}
+
+.checkbox {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+    border: 3px solid var(--primary-color);
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.checkbox.checked {
+    background-color: var(--success-color);
+    border-color: var(--success-color);
+}
+
+.checkbox.checked::after {
+    content: "✓";
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.schritt-titel {
+    flex: 1;
+    font-weight: bold;
+    font-size: 1.15rem;
+    color: var(--text-color);
+}
+
+.schritt.completed .schritt-titel {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.toggle-icon {
+    width: 20px;
+    height: 20px;
+    color: var(--text-muted);
+    transition: transform 0.3s;
+}
+
+.schritt.collapsed .toggle-icon {
+    transform: rotate(-90deg);
+}
+
+.schritt-inhalt {
+    padding: 0 1.8rem 1.5rem 1.8rem;
+    padding-left: 4.5rem;
+    color: var(--text-color);
+    line-height: 1.9;
+    font-size: 1.05rem;
+}
+
+.schritt-inhalt ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.schritt-inhalt li {
+    padding: 0.5rem 0;
+    padding-left: 2rem;
+    position: relative;
+}
+
+.schritt-inhalt li:before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Tipps-Section */
+.tipps-section {
+    margin: 2rem 0;
+    padding: 1.8rem;
+    background-color: #FFFAF0;
+    border-radius: 10px;
+    border-left: 5px solid var(--accent-color);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+}
+
+.tipps-section h2 {
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+.tipps-section ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.tipps-section li {
+    padding: 0.6rem 0;
+    padding-left: 2.5rem;
+    position: relative;
+    font-size: 1.05rem;
+}
+
+.tipps-section li:before {
+    content: "💡";
+    position: absolute;
+    left: 0;
+    font-size: 1.3rem;
+}
+
+/* Fortschrittsanzeige */
+.fortschritt-container {
+    background-color: white;
+    padding: 1.8rem;
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    border: 2px solid var(--border-color);
+}
+
+.fortschritt-text {
+    margin-bottom: 0.8rem;
+    font-weight: bold;
+    color: var(--text-color);
+    font-size: 1.1rem;
+}
+
+.fortschritt-bar {
+    width: 100%;
+    height: 35px;
+    background-color: #E8D5B7;
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+    border: 2px solid var(--border-color);
+}
+
+.fortschritt-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary-color), var(--success-color));
+    transition: width 0.5s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 2rem;
+    }
+
+    .rezept-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #rezeptDetail h1 {
+        font-size: 2rem;
+    }
+
+    .rezept-meta {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
+
+    .schritt-inhalt {
+        padding-left: 1.8rem;
+    }
+
+    .fleisch-input-gruppe {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
