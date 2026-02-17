@@ -1,19 +1,68 @@
 // Aktuelle Kategorie
 let aktuelleKategorie = 'Alle';
 
+// Kategorien aus den Rezeptdaten ermitteln (Reihenfolge festlegen)
+const kategorienReihenfolge = [
+    'Bratwurst',
+    'Brühwurst',
+    'Fleischkäse',
+    'Rohwurst',
+    'Leberwurst',
+    'Blutwurst',
+    'Schinken',
+    'Aspik & Sülze',
+    'Wurst im Glas',
+    'Salami',
+    'Sonstiges'
+];
+
+function getVorhandeneKategorien() {
+    const kategorien = [...new Set(rezepte.map(r => r.kategorie))];
+    // Sortierung nach Reihenfolge, unbekannte Kategorien ans Ende
+    return kategorien.sort((a, b) => {
+        const ai = kategorienReihenfolge.indexOf(a);
+        const bi = kategorienReihenfolge.indexOf(b);
+        if (ai === -1 && bi === -1) return a.localeCompare(b);
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+    });
+}
+
+// Filter-Navigation dynamisch aufbauen
+function bauNavigationAuf() {
+    const nav = document.querySelector('nav');
+    if (!nav) return;
+
+    // Vorhandene Buttons entfernen (außer "Alle")
+    nav.querySelectorAll('button:not(#showAll)').forEach(btn => btn.remove());
+
+    const kategorien = getVorhandeneKategorien();
+    kategorien.forEach(kat => {
+        const btn = document.createElement('button');
+        btn.id = 'filter_' + kat.replace(/\s|&/g, '_');
+        btn.textContent = kat;
+        btn.addEventListener('click', () => {
+            aktuelleKategorie = kat;
+            zeigeRezepte(kat);
+            updateActiveButton(btn.id);
+        });
+        nav.appendChild(btn);
+    });
+}
+
 // Rezepte anzeigen
 function zeigeRezepte(kategorie = 'Alle') {
     const container = document.getElementById('rezeptListe');
     container.innerHTML = '';
     container.className = 'rezept-grid';
 
-    // Filtern nach Kategorie
     const gefilterteRezepte = kategorie === 'Alle'
         ? rezepte
         : rezepte.filter(r => r.kategorie === kategorie);
 
     if (gefilterteRezepte.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #6D4C41; padding: 2rem; font-size: 1.2rem;">Keine Rezepte in dieser Kategorie vorhanden.</p>';
+        container.innerHTML = '<p style="text-align:center;color:#6D4C41;padding:2rem;font-size:1.2rem;">Keine Rezepte in dieser Kategorie vorhanden.</p>';
         return;
     }
 
@@ -24,13 +73,11 @@ function zeigeRezepte(kategorie = 'Alle') {
             window.location.href = `rezept.html?id=${rezept.id}`;
         };
 
-        // Gesamt-Fleischmenge berechnen (nur echtes Fleisch)
         const gesamtFleisch = rezept.fleischsorten.reduce((sum, f) => sum + f.menge, 0);
         const fleischText = gesamtFleisch >= 1000
             ? `${(gesamtFleisch / 1000).toFixed(1).replace('.', ',')} kg Fleisch`
             : `${gesamtFleisch} g Fleisch`;
 
-        // Ausgabe-Info wenn vorhanden
         const ausgabeText = rezept.ausgabe ? `📊 ${rezept.ausgabe}` : '';
 
         karte.innerHTML = `
@@ -47,50 +94,19 @@ function zeigeRezepte(kategorie = 'Alle') {
     });
 }
 
-// Filter-Buttons
+// Aktiven Button markieren
+function updateActiveButton(activeId) {
+    document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+    document.getElementById(activeId)?.classList.add('active');
+}
+
+// "Alle Rezepte" Button
 document.getElementById('showAll')?.addEventListener('click', () => {
     aktuelleKategorie = 'Alle';
     zeigeRezepte('Alle');
     updateActiveButton('showAll');
 });
 
-document.getElementById('filterBratwurst')?.addEventListener('click', () => {
-    aktuelleKategorie = 'Bratwurst';
-    zeigeRezepte('Bratwurst');
-    updateActiveButton('filterBratwurst');
-});
-
-document.getElementById('filterBruehwurst')?.addEventListener('click', () => {
-    aktuelleKategorie = 'Brühwurst';
-    zeigeRezepte('Brühwurst');
-    updateActiveButton('filterBruehwurst');
-});
-
-document.getElementById('filterFleischkaese')?.addEventListener('click', () => {
-    aktuelleKategorie = 'Fleischkäse';
-    zeigeRezepte('Fleischkäse');
-    updateActiveButton('filterFleischkaese');
-});
-
-document.getElementById('filterRohwurst')?.addEventListener('click', () => {
-    aktuelleKategorie = 'Rohwurst';
-    zeigeRezepte('Rohwurst');
-    updateActiveButton('filterRohwurst');
-});
-
-document.getElementById('filterAspik')?.addEventListener('click', () => {
-    aktuelleKategorie = 'Aspik';
-    zeigeRezepte('Aspik');
-    updateActiveButton('filterAspik');
-});
-
-// Aktiven Button markieren
-function updateActiveButton(activeId) {
-    document.querySelectorAll('nav button').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.getElementById(activeId)?.classList.add('active');
-}
-
-// Initial alle Rezepte anzeigen
+// Start
+bauNavigationAuf();
 zeigeRezepte('Alle');
