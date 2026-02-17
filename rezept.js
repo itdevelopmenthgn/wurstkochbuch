@@ -99,7 +99,8 @@ function zeigeRezept(rezept) {
 
         <div class="rezept-meta">
             <div><strong>📂 Kategorie:</strong> ${rezept.kategorie}</div>
-            ${rezept.ausgabe ? `<div><strong>📊 Ausgabe:</strong> ${skaliereAusgabe(rezept.ausgabe, faktor)}</div>` : ''}
+            ${rezept.ausgabe ? `<div><strong>📊 Ausgabe:</strong> <span id="ausgabe-anzeige">${skaliereAusgabe(rezept.ausgabe, faktor)}</span></div>` : ''}
+            ${rezept.quelle ? `<div><strong>📁 Quelle:</strong> ${rezept.quelle}</div>` : ''}
         </div>
 
         <!-- Fleischmengen-Steuerung -->
@@ -135,8 +136,9 @@ function zeigeRezept(rezept) {
         html += '<div class="zutaten-section"><h2>🧅 Weitere Zutaten</h2>';
         html += '<div class="zutaten-kategorie"><ul>';
         rezept.zutaten.forEach(zutat => {
-            const aktuelleMenge = aktuelleZutatenmengen[zutat.name] || zutat.menge;
-            html += `<li><strong>${zutat.name}:</strong> ${formatMengeKg(aktuelleMenge)}</li>`;
+            const aktuelleMenge = aktuelleZutatenmengen[zutat.name] !== undefined
+                ? aktuelleZutatenmengen[zutat.name] : zutat.menge;
+            html += `<li><strong>${zutat.name}:</strong> ${formatZutat(zutat, aktuelleMenge)}</li>`;
         });
         html += '</ul></div></div>';
     }
@@ -238,23 +240,37 @@ function erstelleFleischSteuerung(rezept) {
     return html;
 }
 
+// Schrittgröße je nach Einheit bestimmen
+function getZutatenSchritt(zutat) {
+    const einheit = zutat.einheit || 'g';
+    if (einheit === 'g') return 100;
+    if (einheit === 'ml') return 50;
+    if (einheit === 'cl') return 5;
+    return 1;  // EL, TL, Stück, Dosen, Glas etc.
+}
+
 // Zutaten-Steuerung HTML erstellen
 function erstelleZutatenSteuerung(rezept) {
     let html = '';
     if (rezept.zutaten) {
         rezept.zutaten.forEach((zutat, index) => {
+            // Zutaten ohne Menge (z.B. "nach Bedarf") nicht steuerbar
+            if (zutat.menge === null) return;
+
             const zutatKey = zutat.name;
             const zutatId = `zutat_${index}`;
-            const aktuell = aktuelleZutatenmengen[zutatKey] || zutat.menge;
+            const aktuell = aktuelleZutatenmengen[zutatKey] !== undefined
+                ? aktuelleZutatenmengen[zutatKey] : zutat.menge;
             const displayName = zutat.name.length > 30 ? zutat.name.substring(0, 30) + '...' : zutat.name;
             const escapedKey = zutatKey.replace(/'/g, "\\'");
+            const schritt = getZutatenSchritt(zutat);
             html += `
                 <div class="fleisch-input-gruppe">
                     <label title="${zutat.name}">${displayName}:</label>
                     <div class="fleisch-input">
-                        <button onclick="aendereZutatenmenge('${escapedKey}', -100)">−</button>
-                        <span class="fleisch-anzahl" id="${zutatId}">${formatMengeKg(aktuell)}</span>
-                        <button onclick="aendereZutatenmenge('${escapedKey}', 100)">+</button>
+                        <button onclick="aendereZutatenmenge('${escapedKey}', -${schritt})">−</button>
+                        <span class="fleisch-anzahl" id="${zutatId}">${formatZutat(zutat, aktuell)}</span>
+                        <button onclick="aendereZutatenmenge('${escapedKey}', ${schritt})">+</button>
                     </div>
                 </div>
             `;
@@ -285,7 +301,7 @@ function aendereFleischmenge(fleischsorte, delta) {
             const anzeigeId = `zutat_${index}`;
             const anzeige = document.getElementById(anzeigeId);
             if (anzeige) {
-                anzeige.textContent = formatMengeKg(aktuelleZutatenmengen[zutat.name]);
+                anzeige.textContent = formatZutat(zutat, aktuelleZutatenmengen[zutat.name]);
             }
         });
     }
@@ -329,7 +345,7 @@ function aendereZutatenmenge(zutatKey, delta) {
     const anzeigeId = `zutat_${zutatIndex}`;
     const anzeige = document.getElementById(anzeigeId);
     if (anzeige) {
-        anzeige.textContent = formatMengeKg(aktuelleZutatenmengen[zutatKey]);
+        anzeige.textContent = formatZutat(zutat, aktuelleZutatenmengen[zutatKey]);
     }
 
     // Alle abhängigen Werte neu berechnen (ohne automatische Fleisch-Anpassung)
@@ -361,8 +377,9 @@ function updateAlleWerte() {
             const liElements = zutatenContainer.querySelectorAll('li');
             rezept.zutaten.forEach((zutat, index) => {
                 if (liElements[index]) {
-                    const aktuelleMenge = aktuelleZutatenmengen[zutat.name] || zutat.menge;
-                    liElements[index].innerHTML = `<strong>${zutat.name}:</strong> ${formatMengeKg(aktuelleMenge)}`;
+                    const aktuelleMenge = aktuelleZutatenmengen[zutat.name] !== undefined
+                        ? aktuelleZutatenmengen[zutat.name] : zutat.menge;
+                    liElements[index].innerHTML = `<strong>${zutat.name}:</strong> ${formatZutat(zutat, aktuelleMenge)}`;
                 }
             });
         }
@@ -399,9 +416,9 @@ function updateAlleWerte() {
 
     // Ausgabe aktualisieren
     if (rezept.ausgabe) {
-        const ausgabeElement = document.querySelector('.rezept-meta div:nth-child(2)');
-        if (ausgabeElement && ausgabeElement.textContent.includes('Ausgabe')) {
-            ausgabeElement.innerHTML = `<strong>📊 Ausgabe:</strong> ${skaliereAusgabe(rezept.ausgabe, faktor)}`;
+        const ausgabeSpan = document.getElementById('ausgabe-anzeige');
+        if (ausgabeSpan) {
+            ausgabeSpan.textContent = skaliereAusgabe(rezept.ausgabe, faktor);
         }
     }
 }
@@ -541,7 +558,7 @@ function formatMenge(num) {
 function formatMengeKg(gramm) {
     // Sicherheitscheck
     if (gramm === undefined || gramm === null || isNaN(gramm)) {
-        return '0 g';
+        return '–';
     }
 
     gramm = Number(gramm);
@@ -552,6 +569,33 @@ function formatMengeKg(gramm) {
     } else {
         return `${Math.round(gramm)} g`;
     }
+}
+
+// Zutat mit passender Einheit formatieren
+function formatZutat(zutat, menge) {
+    if (menge === null || menge === undefined) {
+        return zutat.einheit || '–';
+    }
+    const einheit = zutat.einheit || '';
+    // Gewichtseinheiten: g formatieren wie Fleisch
+    if (einheit === 'g') {
+        return formatMengeKg(menge);
+    }
+    // ml formatieren
+    if (einheit === 'ml') {
+        return menge >= 1000
+            ? `${(menge / 1000).toFixed(1).replace('.', ',')} l`
+            : `${Math.round(menge)} ml`;
+    }
+    // cl
+    if (einheit === 'cl') {
+        return `${formatMenge(menge)} cl`;
+    }
+    // Alle anderen (EL, TL, Stück, Dosen, Glas, etc.) – gerundet
+    const gerundet = menge < 10
+        ? (Math.round(menge * 2) / 2).toString().replace('.', ',')
+        : Math.round(menge).toString();
+    return `${gerundet} ${einheit}`;
 }
 
 // Schritt als erledigt markieren/demarkieren
