@@ -4,6 +4,7 @@
 let schrittStatus = {};
 let aktuelleFleischmengen = {};
 let aktuelleZutatenmengen = {};
+let rezept = null;
 // rezeptId wird von rezept.html bereits als const im globalen Scope gesetzt und ist hier verfügbar
 
 // =====================
@@ -31,7 +32,7 @@ function speichereFleischmengen(rezeptId, mengen) {
 // Rezept initialisieren
 // =====================
 function initRezept() {
-    const rezept = window.rezepteGeladen ? window.rezepteGeladen[0] : null;
+    rezept = window.rezepteGeladen ? window.rezepteGeladen[0] : null;
     if (!rezept) {
         document.getElementById('rezeptDetail').innerHTML = '<p>Rezept nicht gefunden</p>';
         return;
