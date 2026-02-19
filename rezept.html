@@ -31,14 +31,12 @@
     </script>
 
     <script src="supabase.js"></script>
+    <script src="rezept.js"></script>
     <script>
-        // Ladeindikator bereits gesetzt im <main>
-
         // Rezept-ID aus URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const rezeptId = parseInt(urlParams.get('id')) || 1;
+        const rezeptId = parseInt(new URLSearchParams(window.location.search).get('id')) || 1;
 
-        // Supabase: Rezept laden
+        // Supabase: Rezept laden und direkt anzeigen
         sb.getById('rezepte', rezeptId)
           .then(row => {
             if (!row) {
@@ -46,21 +44,8 @@
                     '<p style="text-align:center;color:#c0392b;padding:3rem;">Rezept nicht gefunden.</p>';
                 return;
             }
-
-            // Globale Variable für rezept.js
             window.rezepteGeladen = [rowZuRezept(row)];
-
-            // rezept.js dynamisch laden
-            const s = document.createElement('script');
-            s.src = 'rezept.js';
-            document.body.appendChild(s);
-
-            // Sobald rezept.js geladen ist, initRezept starten (falls vorhanden)
-            s.onload = () => {
-                if (typeof initRezept === "function") {
-                    initRezept();
-                }
-            };
+            initRezept();
         })
         .catch(err => {
             document.getElementById('rezeptDetail').innerHTML =

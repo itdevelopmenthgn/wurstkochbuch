@@ -4,7 +4,7 @@
 let schrittStatus = {};
 let aktuelleFleischmengen = {};
 let aktuelleZutatenmengen = {};
-let rezeptId = parseInt(new URLSearchParams(window.location.search).get('id')) || 1;
+// rezeptId wird von rezept.html bereits als const im globalen Scope gesetzt und ist hier verfügbar
 
 // =====================
 // LocalStorage Helfer
