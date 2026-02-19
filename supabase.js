@@ -127,3 +127,5 @@ function rowZuRezept(row) {
         tipps:          row.tipps || []
     };
 }
+
+window.sb = sb;
