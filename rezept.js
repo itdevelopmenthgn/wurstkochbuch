@@ -1,4 +1,13 @@
+// Init-Funktion, die aufgerufen wird, wenn die Daten aus Supabase geladen sind
+function initRezept() {
+    const rezept = window.rezepteGeladen ? window.rezepteGeladen[0] : null;
+    window.zeigeRezept(rezept);
+}
+
 // Globale Funktion zum Anzeigen eines Rezepts
+
+
+
 window.zeigeRezept = function(rezept) {
 
     const container = document.getElementById("rezeptDetail");
