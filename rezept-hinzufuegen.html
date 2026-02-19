@@ -516,21 +516,13 @@
         <!-- AKTIONEN -->
         <div class="form-actions">
             <button class="btn-secondary" onclick="formularLeeren()">Formular leeren</button>
-            <button class="btn-primary" onclick="generiereCode()">JS-Code generieren ▶</button>
+            <button class="btn-primary" onclick="speichereRezept()">Rezept speichern ▶</button>
         </div>
 
-        <!-- AUSGABE -->
-        <div id="ausgabeBereich" class="form-card" style="margin-top:1.5rem;">
-            <h2>📤 Generierter JS-Code</h2>
-            <div class="info-box">
-                Den Code unten kopieren und in die passende Kategorie-Datei einfügen
-                (z.B. <span class="hinweis-datei" id="hinweisDatei">data-bratwurst.js</span>).
-                Die ID muss eindeutig sein – bitte die nächste freie ID verwenden.
-            </div>
-            <pre id="jsOutput"></pre>
-            <div class="form-actions" style="margin-top:1rem;">
-                <button class="btn-copy" onclick="kopieren()">📋 In Zwischenablage kopieren</button>
-            </div>
+        <!-- ERFOLGSMELDUNG -->
+        <div id="erfolgMeldung" class="form-card" style="margin-top:1.5rem;display:none;border-color:var(--success-color);">
+            <h2 style="color:var(--success-color);">✓ Rezept gespeichert!</h2>
+            <p>Das Rezept wurde erfolgreich in die Datenbank eingetragen und ist sofort in der <a href="uebersicht.html" style="color:var(--primary-color);">Übersicht</a> sichtbar.</p>
         </div>
 
     </div>
@@ -541,21 +533,7 @@
             window.location.replace('index.html');
         }
     </script>
-    <script src="data-bratwurst.js"></script>
-    <script src="data-bruehwurst.js"></script>
-    <script src="data-fleischkaese.js"></script>
-    <script src="data-rohwurst.js"></script>
-    <script src="data-leberwurst.js"></script>
-    <script src="data-blutwurst.js"></script>
-    <script src="data-schinken.js"></script>
-    <script src="data-aspik.js"></script>
-    <script src="data-wurst-im-glas.js"></script>
-    <script src="data-salami.js"></script>
-    <script src="data-wildwurst.js"></script>
-    <script src="data-schmalz.js"></script>
-    <script src="data-sonstiges.js"></script>
-    <script src="data-brot.js"></script>
-    <script src="data.js"></script>
+    <script src="supabase.js"></script>
     <script>
     // ── Einheiten ────────────────────────────────────────────────────────
     const EINHEITEN = ['g', 'kg', 'ml', 'l', 'EL', 'TL', 'Stk', 'Prise', 'Msp', '%'];
@@ -670,7 +648,7 @@
         document.getElementById('gewuerzeBody').innerHTML = '';
         document.getElementById('schritteContainer').innerHTML = '';
         document.getElementById('tippsContainer').innerHTML = '';
-        document.getElementById('ausgabeBereich').classList.remove('sichtbar');
+        document.getElementById('erfolgMeldung').style.display = 'none';
         gruppenZaehler = 0;
         addFleischzeile();
         addZutatzeile('zutaten');
@@ -736,67 +714,10 @@
         return Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
     }
 
-    // ── Nächste freie ID ermitteln ───────────────────────────────────────
-    function naechsteId() {
-        if (typeof rezepte === 'undefined' || rezepte.length === 0) return 400;
-        return Math.max(...rezepte.map(r => r.id)) + 1;
-    }
-
-    // ── JS-Code generieren ───────────────────────────────────────────────
-    function jsWert(val) {
-        if (typeof val === 'string') {
-            return JSON.stringify(val);
-        }
-        if (typeof val === 'number') return val.toString();
-        if (val === null) return 'null';
-        if (Array.isArray(val)) {
-            if (val.length === 0) return '[]';
-            const items = val.map(item => {
-                if (typeof item === 'string') return '        ' + JSON.stringify(item);
-                if (typeof item === 'object') return formatObj(item, '        ');
-                return '        ' + item;
-            });
-            return '[\n' + items.join(',\n') + '\n    ]';
-        }
-        return JSON.stringify(val);
-    }
-
-    function formatObj(obj, indent) {
-        const lines = Object.entries(obj).map(([k, v]) => {
-            let val;
-            if (typeof v === 'string') val = JSON.stringify(v);
-            else if (typeof v === 'number') val = v.toString();
-            else if (v === null) val = 'null';
-            else if (Array.isArray(v)) {
-                if (v.length === 0) val = '[]';
-                else {
-                    const inner = v.map(item => {
-                        if (typeof item === 'string') return indent + '    ' + JSON.stringify(item);
-                        return indent + '    ' + JSON.stringify(item);
-                    });
-                    val = '[\n' + inner.join(',\n') + '\n' + indent + ']';
-                }
-            }
-            else val = JSON.stringify(v);
-            return indent + '    ' + k + ': ' + val;
-        });
-        return '{\n' + lines.join(',\n') + '\n' + indent + '}';
-    }
-
-    function generiereCode() {
-        const titel = document.getElementById('fTitel').value.trim();
-        const kategorie = document.getElementById('fKategorie').value;
-        if (!titel) { alert('Bitte Rezeptname eingeben.'); return; }
-        if (!kategorie) { alert('Bitte Kategorie wählen.'); return; }
-
-        const id = naechsteId();
+    // ── Rezept sammeln ───────────────────────────────────────────────────
+    function sammleRezept(id) {
         const fleisch = leseFleisch();
         const basisGesamt = fleisch.reduce((s, f) => s + (f.menge || 0), 0);
-        const zutaten = leseTabellenzeilen('zutatenBody');
-        const gewuerze = leseTabellenzeilen('gewuerzeBody');
-        const schritte = leseSchritte();
-        const tipps = leseTipps();
-
         const darmCheck = document.getElementById('darmCheck').checked;
         let darm = null;
         if (darmCheck) {
@@ -806,160 +727,49 @@
                 menge: document.getElementById('darmMenge').value.trim() || ''
             };
         }
-
-        const rezept = {
+        return {
             id,
-            titel,
-            kategorie,
-            beschreibung: document.getElementById('fBeschreibung').value.trim(),
-            quelle: document.getElementById('fQuelle').value.trim(),
-            basisMenge: { gesamt: basisGesamt },
-            fleischsorten: fleisch,
-            zutaten,
-            gewuerze,
+            titel:          document.getElementById('fTitel').value.trim(),
+            kategorie:      document.getElementById('fKategorie').value,
+            beschreibung:   document.getElementById('fBeschreibung').value.trim(),
+            quelle:         document.getElementById('fQuelle').value.trim(),
+            basis_gesamt:   basisGesamt,
+            fleischsorten:  fleisch,
+            zutaten:        leseTabellenzeilen('zutatenBody'),
+            gewuerze:       leseTabellenzeilen('gewuerzeBody'),
             darm,
-            ausgabe: document.getElementById('fAusgabe').value.trim(),
-            schritte,
-            tipps
+            ausgabe:        document.getElementById('fAusgabe').value.trim(),
+            schritte:       leseSchritte(),
+            tipps:          leseTipps()
         };
-
-        // Generiere lesbaren JS-Code
-        const lines = [];
-        lines.push('    {');
-        lines.push(`        id: ${rezept.id},`);
-        lines.push(`        titel: ${JSON.stringify(rezept.titel)},`);
-        lines.push(`        kategorie: ${JSON.stringify(rezept.kategorie)},`);
-        lines.push(`        beschreibung: ${JSON.stringify(rezept.beschreibung)},`);
-        lines.push(`        quelle: ${JSON.stringify(rezept.quelle)},`);
-        lines.push(`        basisMenge: { gesamt: ${rezept.basisMenge.gesamt} },`);
-
-        // Fleischsorten
-        if (rezept.fleischsorten.length === 0) {
-            lines.push('        fleischsorten: [],');
-        } else {
-            lines.push('        fleischsorten: [');
-            rezept.fleischsorten.forEach((f, i) => {
-                const comma = i < rezept.fleischsorten.length - 1 ? ',' : '';
-                lines.push(`            { name: ${JSON.stringify(f.name)}, menge: ${f.menge}, fettgehalt: ${JSON.stringify(f.fettgehalt)} }${comma}`);
-            });
-            lines.push('        ],');
-        }
-
-        // Zutaten
-        if (rezept.zutaten.length === 0) {
-            lines.push('        zutaten: [],');
-        } else {
-            lines.push('        zutaten: [');
-            rezept.zutaten.forEach((z, i) => {
-                const comma = i < rezept.zutaten.length - 1 ? ',' : '';
-                lines.push(`            { name: ${JSON.stringify(z.name)}, menge: ${z.menge}, einheit: ${JSON.stringify(z.einheit)} }${comma}`);
-            });
-            lines.push('        ],');
-        }
-
-        // Gewürze
-        if (rezept.gewuerze.length === 0) {
-            lines.push('        gewuerze: [],');
-        } else {
-            lines.push('        gewuerze: [');
-            rezept.gewuerze.forEach((g, i) => {
-                const comma = i < rezept.gewuerze.length - 1 ? ',' : '';
-                lines.push(`            { name: ${JSON.stringify(g.name)}, menge: ${g.menge}, einheit: ${JSON.stringify(g.einheit)} }${comma}`);
-            });
-            lines.push('        ],');
-        }
-
-        // Darm
-        if (rezept.darm === null) {
-            lines.push('        darm: null,');
-        } else {
-            lines.push(`        darm: { typ: ${JSON.stringify(rezept.darm.typ)}, kaliber: ${JSON.stringify(rezept.darm.kaliber)}, menge: ${JSON.stringify(rezept.darm.menge)} },`);
-        }
-
-        lines.push(`        ausgabe: ${JSON.stringify(rezept.ausgabe)},`);
-
-        // Schritte
-        if (rezept.schritte.length === 0) {
-            lines.push('        schritte: [],');
-        } else {
-            lines.push('        schritte: [');
-            rezept.schritte.forEach((sg, gi) => {
-                const gcomma = gi < rezept.schritte.length - 1 ? ',' : '';
-                lines.push('            {');
-                lines.push(`                gruppe: ${JSON.stringify(sg.gruppe)},`);
-                lines.push('                schritte: [');
-                sg.schritte.forEach((s, si) => {
-                    const scomma = si < sg.schritte.length - 1 ? ',' : '';
-                    lines.push(`                    { titel: ${JSON.stringify(s.titel)}, inhalt: ${JSON.stringify(s.inhalt)} }${scomma}`);
-                });
-                lines.push('                ]');
-                lines.push(`            }${gcomma}`);
-            });
-            lines.push('        ],');
-        }
-
-        // Tipps
-        if (rezept.tipps.length === 0) {
-            lines.push('        tipps: []');
-        } else {
-            lines.push('        tipps: [');
-            rezept.tipps.forEach((t, i) => {
-                const comma = i < rezept.tipps.length - 1 ? ',' : '';
-                lines.push(`            ${JSON.stringify(t)}${comma}`);
-            });
-            lines.push('        ]');
-        }
-
-        lines.push('    },');
-
-        const code = lines.join('\n');
-        document.getElementById('jsOutput').textContent = code;
-
-        // Hinweis welche Datei
-        const dateiMap = {
-            'Bratwurst': 'data-bratwurst.js',
-            'Brühwurst': 'data-bruehwurst.js',
-            'Fleischkäse': 'data-fleischkaese.js',
-            'Rohwurst': 'data-rohwurst.js',
-            'Leberwurst': 'data-leberwurst.js',
-            'Blutwurst': 'data-blutwurst.js',
-            'Schinken': 'data-schinken.js',
-            'Aspik & Sülze': 'data-aspik.js',
-            'Wurst im Glas': 'data-wurst-im-glas.js',
-            'Salami': 'data-salami.js',
-            'Wildwurst': 'data-wildwurst.js',
-            'Schmalz & Spezialitäten': 'data-schmalz.js',
-            'Sonstiges': 'data-sonstiges.js',
-            'Brot': 'data-brot.js'
-        };
-        document.getElementById('hinweisDatei').textContent = dateiMap[kategorie] || 'data-sonstiges.js';
-
-        const bereich = document.getElementById('ausgabeBereich');
-        bereich.classList.add('sichtbar');
-        bereich.scrollIntoView({ behavior: 'smooth' });
     }
 
-    // ── Kopieren ─────────────────────────────────────────────────────────
-    function kopieren() {
-        const text = document.getElementById('jsOutput').textContent;
-        navigator.clipboard.writeText(text).then(() => {
-            const btn = document.querySelector('.btn-copy');
-            const orig = btn.textContent;
-            btn.textContent = '✓ Kopiert!';
-            setTimeout(() => { btn.textContent = orig; }, 2000);
-        }).catch(() => {
-            // Fallback für file://
-            const ta = document.createElement('textarea');
-            ta.value = text;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-            const btn = document.querySelector('.btn-copy');
-            const orig = btn.textContent;
-            btn.textContent = '✓ Kopiert!';
-            setTimeout(() => { btn.textContent = orig; }, 2000);
-        });
+    // ── Speichern in Supabase ────────────────────────────────────────────
+    async function speichereRezept() {
+        const titel = document.getElementById('fTitel').value.trim();
+        const kategorie = document.getElementById('fKategorie').value;
+        if (!titel) { alert('Bitte Rezeptname eingeben.'); return; }
+        if (!kategorie) { alert('Bitte Kategorie wählen.'); return; }
+
+        const btn = document.querySelector('.btn-primary');
+        btn.disabled = true;
+        btn.textContent = '⏳ Wird gespeichert …';
+
+        try {
+            const neueId = await sb.naechsteId('rezepte');
+            const row = sammleRezept(neueId);
+            await sb.insert('rezepte', row);
+
+            // Erfolgsmeldung
+            document.getElementById('erfolgMeldung').style.display = 'block';
+            document.getElementById('erfolgMeldung').scrollIntoView({ behavior: 'smooth' });
+            formularLeeren();
+        } catch (err) {
+            alert('Fehler beim Speichern: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Rezept speichern ▶';
+        }
     }
     </script>
 </body>

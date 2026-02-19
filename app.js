@@ -1,3 +1,6 @@
+// Globale Rezeptliste – wird von uebersicht.html async aus Supabase befüllt
+let rezepte = [];
+
 // Aktuelle Kategorie
 let aktuelleKategorie = 'Alle';
 let aktuelleSuche = '';
@@ -146,6 +149,4 @@ document.getElementById('suchfeld')?.addEventListener('input', (e) => {
     zeigeRezepte(aktuelleKategorie);
 });
 
-// Start
-bauNavigationAuf();
-zeigeRezepte('Alle');
+// Start wird von uebersicht.html nach dem async Laden aufgerufen

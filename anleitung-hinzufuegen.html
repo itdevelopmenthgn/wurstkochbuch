@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anleitung hinzufügen – Die Würstelmacher</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .form-container {
+            max-width: 860px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .form-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 8px 8px 0 0;
+        }
+        .form-card h2 {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            margin-bottom: 1.2rem;
+            margin-top: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        .form-row.single { grid-template-columns: 1fr; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.3rem;
+            font-size: 0.95rem;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.6rem 0.9rem;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 1rem;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+
+        /* Gruppen */
+        .gruppe-block {
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(139,69,19,0.03);
+        }
+        .gruppe-header {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 0.7rem;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        .gruppe-header input {
+            padding: 0.5rem 0.8rem;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .typ-toggle {
+            display: flex;
+            gap: 0.4rem;
+        }
+        .typ-btn {
+            background: rgba(139,69,19,0.1);
+            color: var(--primary-color);
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.3rem 0.7rem;
+            cursor: pointer;
+            font-family: Georgia, serif;
+            font-size: 0.85rem;
+            transition: background 0.2s;
+        }
+        .typ-btn.aktiv {
+            background: var(--primary-color);
+            color: #FFF8DC;
+            border-color: var(--primary-color);
+        }
+
+        /* Tabellen-Einträge */
+        .eintraege-tabelle {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0.6rem;
+        }
+        .eintraege-tabelle thead th {
+            background: var(--primary-color);
+            color: #FFF8DC;
+            padding: 0.4rem 0.6rem;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+        .eintraege-tabelle tbody tr:nth-child(even) { background: rgba(139,69,19,0.04); }
+        .eintraege-tabelle tbody td { padding: 0.25rem 0.35rem; }
+        .eintraege-tabelle tbody td input {
+            width: 100%;
+            padding: 0.35rem 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 0.9rem;
+        }
+
+        /* Spalten-Konfiguration */
+        .spalten-config {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-bottom: 0.7rem;
+            align-items: center;
+        }
+        .spalten-config label { font-size: 0.85rem; color: var(--text-muted); }
+        .spalten-config input[type=text] {
+            padding: 0.3rem 0.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 0.85rem;
+            width: 90px;
+        }
+        .btn-add-spalte {
+            background: rgba(139,69,19,0.1);
+            color: var(--primary-color);
+            border: 1px dashed var(--border-color);
+            border-radius: 4px;
+            padding: 0.3rem 0.7rem;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: Georgia, serif;
+        }
+        .btn-del-spalte {
+            background: #c0392b;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 0.15rem 0.4rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+            margin-left: 2px;
+        }
+
+        .btn-del-row {
+            background: #c0392b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.3rem 0.5rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .btn-add-row {
+            background: rgba(139,69,19,0.1);
+            color: var(--primary-color);
+            border: 2px dashed var(--border-color);
+            border-radius: 5px;
+            padding: 0.4rem 1rem;
+            cursor: pointer;
+            font-family: Georgia, serif;
+            font-size: 0.9rem;
+            width: 100%;
+            margin-top: 0.3rem;
+        }
+        .btn-add-row:hover, .btn-add-spalte:hover { background: rgba(139,69,19,0.2); }
+        .btn-add-gruppe {
+            background: rgba(139,69,19,0.1);
+            color: var(--primary-color);
+            border: 2px dashed var(--border-color);
+            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-family: Georgia, serif;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+        .btn-add-gruppe:hover { background: rgba(139,69,19,0.2); }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: #FFF8DC;
+            border: none;
+            border-radius: 6px;
+            padding: 0.8rem 2rem;
+            font-size: 1.1rem;
+            font-family: Georgia, serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-primary:hover { background: var(--secondary-color); }
+        .btn-primary:disabled { opacity: 0.5; cursor: default; }
+        .btn-secondary {
+            background: rgba(139,69,19,0.1);
+            color: var(--primary-color);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+            font-family: Georgia, serif;
+            cursor: pointer;
+        }
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        .text-block textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: 0.6rem 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 0.95rem;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .tipp-zeile { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
+        .tipp-zeile input {
+            flex: 1;
+            padding: 0.5rem 0.8rem;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 0.95rem;
+        }
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <img src="logo.png" alt="Die Würstelmacher seit 2018" class="header-logo">
+            <div class="header-text">
+                <h1>Die Würstelmacher</h1>
+                <p class="subtitle">est. 2018 &middot; Rezeptbuch</p>
+            </div>
+        </div>
+        <div style="text-align:center;margin-bottom:1rem;">
+            <a href="uebersicht.html" class="back-link">← Zurück zur Übersicht</a>
+        </div>
+    </header>
+
+    <div class="form-container">
+
+        <!-- INFOS -->
+        <div class="form-card">
+            <h2>📋 Anleitungs-Informationen</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fTitel">Titel *</label>
+                    <input type="text" id="fTitel" placeholder="z.B. Kerntemperatur-Übersicht">
+                </div>
+                <div class="form-group">
+                    <label for="fKategorie">Kategorie</label>
+                    <input type="text" id="fKategorie" placeholder="z.B. Temperaturen, Anleitung">
+                </div>
+            </div>
+            <div class="form-row single">
+                <div class="form-group">
+                    <label for="fBeschreibung">Kurzbeschreibung</label>
+                    <textarea id="fBeschreibung" placeholder="Kurze Beschreibung …"></textarea>
+                </div>
+            </div>
+            <div class="form-row single">
+                <div class="form-group">
+                    <label for="fQuelle">Quelle</label>
+                    <input type="text" id="fQuelle" placeholder="z.B. eigene Notizen, PDF-Name">
+                </div>
+            </div>
+        </div>
+
+        <!-- INHALT -->
+        <div class="form-card">
+            <h2>📊 Inhalt</h2>
+            <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem;">
+                Jede Gruppe kann entweder eine <strong>Tabelle</strong> (mit konfigurierbaren Spalten) oder einen <strong>Textblock</strong> enthalten.
+            </p>
+            <div id="gruppenContainer"></div>
+            <button class="btn-add-gruppe" onclick="addGruppe()">+ Gruppe hinzufügen</button>
+        </div>
+
+        <!-- TIPPS -->
+        <div class="form-card">
+            <h2>💡 Tipps</h2>
+            <div id="tippsContainer"></div>
+            <button class="btn-add-row" onclick="addTipp()">+ Tipp hinzufügen</button>
+        </div>
+
+        <!-- AKTIONEN -->
+        <div class="form-actions">
+            <button class="btn-secondary" onclick="formularLeeren()">Formular leeren</button>
+            <button class="btn-primary" id="btnSpeichern" onclick="speichern()">Anleitung speichern ▶</button>
+        </div>
+
+        <!-- ERFOLGSMELDUNG -->
+        <div id="erfolgMeldung" class="form-card" style="margin-top:1.5rem;display:none;border-color:var(--success-color);">
+            <h2 style="color:var(--success-color);">✓ Anleitung gespeichert!</h2>
+            <p>Die Anleitung wurde erfolgreich gespeichert und ist sofort in den <a href="anleitungen.html" style="color:var(--primary-color);">Anleitungen</a> sichtbar.</p>
+        </div>
+
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        if (sessionStorage.getItem('wk_auth') !== AUTH_HASH) {
+            window.location.replace('index.html');
+        }
+    </script>
+    <script src="supabase.js"></script>
+    <script>
+    let gruppenZaehler = 0;
+
+    // ── Gruppe hinzufügen ────────────────────────────────────────────────
+    function addGruppe(name = '', typ = 'tabelle') {
+        gruppenZaehler++;
+        const gid = 'gruppe_' + gruppenZaehler;
+        const container = document.getElementById('gruppenContainer');
+        const div = document.createElement('div');
+        div.className = 'gruppe-block';
+        div.id = gid;
+
+        div.innerHTML = `
+            <div class="gruppe-header">
+                <input type="text" class="gruppen-titel" placeholder="Gruppenname (z.B. Rind, Geflügel)" value="${name}">
+                <div class="typ-toggle">
+                    <button class="typ-btn ${typ==='tabelle'?'aktiv':''}" onclick="setTyp('${gid}','tabelle',this)">Tabelle</button>
+                    <button class="typ-btn ${typ==='text'?'aktiv':''}" onclick="setTyp('${gid}','text',this)">Text</button>
+                </div>
+                <button class="btn-del-row" onclick="document.getElementById('${gid}').remove()">✕</button>
+            </div>
+            <div class="gruppe-inhalt"></div>
+        `;
+        container.appendChild(div);
+
+        if (typ === 'tabelle') initTabelle(gid);
+        else initText(gid);
+    }
+
+    function setTyp(gid, typ, btn) {
+        const gruppe = document.getElementById(gid);
+        gruppe.querySelectorAll('.typ-btn').forEach(b => b.classList.remove('aktiv'));
+        btn.classList.add('aktiv');
+        if (typ === 'tabelle') initTabelle(gid);
+        else initText(gid);
+    }
+
+    // ── Tabellen-Modus ───────────────────────────────────────────────────
+    function initTabelle(gid, spalten = ['name', 'temp', 'zeit'], zeilen = []) {
+        const gruppe = document.getElementById(gid);
+        const inhalt = gruppe.querySelector('.gruppe-inhalt');
+        inhalt.innerHTML = '';
+        inhalt.dataset.typ = 'tabelle';
+
+        // Spalten-Konfiguration
+        const spDiv = document.createElement('div');
+        spDiv.className = 'spalten-config';
+        spDiv.innerHTML = `<label>Spalten:</label>`;
+        spalten.forEach(s => addSpaltenChip(spDiv, s));
+        const addBtn = document.createElement('button');
+        addBtn.className = 'btn-add-spalte';
+        addBtn.textContent = '+ Spalte';
+        addBtn.onclick = () => {
+            const name = prompt('Spaltenname (z.B. rosa, vollgar, temp):');
+            if (name && name.trim()) {
+                addSpaltenChip(spDiv, name.trim());
+                aktualisiereTabellenHeader(gid);
+            }
+        };
+        spDiv.appendChild(addBtn);
+        inhalt.appendChild(spDiv);
+
+        // Tabelle
+        const tbl = document.createElement('table');
+        tbl.className = 'eintraege-tabelle';
+        tbl.id = gid + '_tabelle';
+        const thead = document.createElement('thead');
+        const tbody = document.createElement('tbody');
+        tbl.appendChild(thead);
+        tbl.appendChild(tbody);
+        inhalt.appendChild(tbl);
+
+        aktualisiereTabellenHeader(gid);
+
+        // Bestehende Zeilen
+        if (zeilen.length > 0) {
+            zeilen.forEach(z => addTabellenzeile(gid, z));
+        } else {
+            addTabellenzeile(gid);
+        }
+
+        const addZeile = document.createElement('button');
+        addZeile.className = 'btn-add-row';
+        addZeile.textContent = '+ Zeile hinzufügen';
+        addZeile.onclick = () => addTabellenzeile(gid);
+        inhalt.appendChild(addZeile);
+    }
+
+    function getSpalten(gid) {
+        const gruppe = document.getElementById(gid);
+        const chips = gruppe.querySelectorAll('.spalten-config .spalten-chip');
+        return Array.from(chips).map(c => c.dataset.spalte);
+    }
+
+    function addSpaltenChip(spDiv, name) {
+        const chip = document.createElement('span');
+        chip.className = 'spalten-chip';
+        chip.dataset.spalte = name;
+        chip.style.cssText = 'display:inline-flex;align-items:center;gap:2px;background:rgba(139,69,19,0.15);border:1px solid var(--border-color);border-radius:4px;padding:0.2rem 0.5rem;font-size:0.85rem;';
+        chip.innerHTML = `<span>${name}</span><button class="btn-del-spalte" onclick="this.parentElement.remove()">✕</button>`;
+        spDiv.insertBefore(chip, spDiv.querySelector('.btn-add-spalte'));
+    }
+
+    function aktualisiereTabellenHeader(gid) {
+        const tbl = document.getElementById(gid + '_tabelle');
+        if (!tbl) return;
+        const spalten = getSpalten(gid);
+        const thead = tbl.querySelector('thead');
+        thead.innerHTML = `<tr>${spalten.map(s => `<th>${s}</th>`).join('')}<th style="width:40px"></th></tr>`;
+    }
+
+    function addTabellenzeile(gid, werte = {}) {
+        const tbl = document.getElementById(gid + '_tabelle');
+        const spalten = getSpalten(gid);
+        const tbody = tbl.querySelector('tbody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = spalten.map(s =>
+            `<td><input type="text" data-spalte="${s}" placeholder="${s}" value="${werte[s] || ''}"></td>`
+        ).join('') + `<td><button class="btn-del-row" onclick="this.closest('tr').remove()">✕</button></td>`;
+        tbody.appendChild(tr);
+    }
+
+    // ── Text-Modus ───────────────────────────────────────────────────────
+    function initText(gid, text = '') {
+        const gruppe = document.getElementById(gid);
+        const inhalt = gruppe.querySelector('.gruppe-inhalt');
+        inhalt.innerHTML = '';
+        inhalt.dataset.typ = 'text';
+        inhalt.innerHTML = `
+            <div class="text-block">
+                <textarea placeholder="Text …">${text}</textarea>
+            </div>
+        `;
+    }
+
+    // ── Tipps ────────────────────────────────────────────────────────────
+    function addTipp(text = '') {
+        const container = document.getElementById('tippsContainer');
+        const div = document.createElement('div');
+        div.className = 'tipp-zeile';
+        div.innerHTML = `
+            <input type="text" placeholder="Tipp …" value="${text}">
+            <button class="btn-del-row" onclick="this.parentElement.remove()">✕</button>
+        `;
+        container.appendChild(div);
+    }
+
+    // ── Initialbefüllung ─────────────────────────────────────────────────
+    addGruppe();
+    addTipp();
+
+    // ── Formular leeren ──────────────────────────────────────────────────
+    function formularLeeren() {
+        if (!confirm('Formular wirklich leeren?')) return;
+        ['fTitel','fKategorie','fBeschreibung','fQuelle'].forEach(id => {
+            document.getElementById(id).value = '';
+        });
+        document.getElementById('gruppenContainer').innerHTML = '';
+        document.getElementById('tippsContainer').innerHTML = '';
+        document.getElementById('erfolgMeldung').style.display = 'none';
+        gruppenZaehler = 0;
+        addGruppe();
+        addTipp();
+    }
+
+    // ── Inhalt auslesen ──────────────────────────────────────────────────
+    function leseInhalt() {
+        const gruppen = document.querySelectorAll('.gruppe-block');
+        const result = [];
+        gruppen.forEach(gDiv => {
+            const gruppenName = gDiv.querySelector('.gruppen-titel')?.value.trim() || 'Gruppe';
+            const inhalt = gDiv.querySelector('.gruppe-inhalt');
+            if (!inhalt) return;
+
+            if (inhalt.dataset.typ === 'text') {
+                const text = inhalt.querySelector('textarea')?.value.trim() || '';
+                result.push({ gruppe: gruppenName, text });
+            } else {
+                // Tabelle
+                const zeilen = inhalt.querySelectorAll('tbody tr');
+                const eintraege = [];
+                zeilen.forEach(tr => {
+                    const eintrag = {};
+                    tr.querySelectorAll('input[data-spalte]').forEach(inp => {
+                        eintrag[inp.dataset.spalte] = inp.value.trim();
+                    });
+                    if (Object.values(eintrag).some(v => v)) eintraege.push(eintrag);
+                });
+                if (eintraege.length > 0) result.push({ gruppe: gruppenName, eintraege });
+            }
+        });
+        return result;
+    }
+
+    function leseTipps() {
+        const inputs = document.querySelectorAll('#tippsContainer .tipp-zeile input');
+        const tipps = Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+        if (tipps.length === 0) return null;
+        return tipps.length === 1 ? tipps[0] : tipps;
+    }
+
+    // ── Speichern ────────────────────────────────────────────────────────
+    async function speichern() {
+        const titel = document.getElementById('fTitel').value.trim();
+        if (!titel) { alert('Bitte Titel eingeben.'); return; }
+
+        const btn = document.getElementById('btnSpeichern');
+        btn.disabled = true;
+        btn.textContent = '⏳ Wird gespeichert …';
+
+        try {
+            const neueId = await sb.naechsteId('anleitungen');
+            const row = {
+                id:           neueId,
+                titel,
+                kategorie:    document.getElementById('fKategorie').value.trim(),
+                beschreibung: document.getElementById('fBeschreibung').value.trim(),
+                quelle:       document.getElementById('fQuelle').value.trim(),
+                inhalt:       leseInhalt(),
+                tipps:        leseTipps()
+            };
+            await sb.insert('anleitungen', row);
+            document.getElementById('erfolgMeldung').style.display = 'block';
+            document.getElementById('erfolgMeldung').scrollIntoView({ behavior: 'smooth' });
+            formularLeeren();
+        } catch(err) {
+            alert('Fehler beim Speichern: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Anleitung speichern ▶';
+        }
+    }
+    </script>
+</body>
+</html>

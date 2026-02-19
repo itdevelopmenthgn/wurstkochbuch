@@ -28,21 +28,31 @@
             window.location.replace('index.html');
         }
     </script>
-    <script src="data-bratwurst.js"></script>
-    <script src="data-bruehwurst.js"></script>
-    <script src="data-fleischkaese.js"></script>
-    <script src="data-rohwurst.js"></script>
-    <script src="data-leberwurst.js"></script>
-    <script src="data-blutwurst.js"></script>
-    <script src="data-schinken.js"></script>
-    <script src="data-aspik.js"></script>
-    <script src="data-wurst-im-glas.js"></script>
-    <script src="data-salami.js"></script>
-    <script src="data-wildwurst.js"></script>
-    <script src="data-schmalz.js"></script>
-    <script src="data-sonstiges.js"></script>
-    <script src="data-brot.js"></script>
-    <script src="data.js"></script>
-    <script src="rezept.js"></script>
+    <script src="supabase.js"></script>
+    <script>
+        // Ladeindikator
+        document.getElementById('rezeptDetail').innerHTML =
+            '<p style="text-align:center;color:#6D4C41;padding:3rem;font-size:1.2rem;">⏳ Rezept wird geladen …</p>';
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const rezeptId = parseInt(urlParams.get('id')) || 1;
+
+        sb.getById('rezepte', rezeptId).then(row => {
+            if (!row) {
+                document.getElementById('rezeptDetail').innerHTML =
+                    '<p style="text-align:center;color:#c0392b;padding:3rem;">Rezept nicht gefunden.</p>';
+                return;
+            }
+            // Globale Variable für rezept.js bereitstellen
+            window.rezepteGeladen = [rowZuRezept(row)];
+            // rezept.js dynamisch laden – erst jetzt, wenn Daten vorhanden
+            const s = document.createElement('script');
+            s.src = 'rezept.js';
+            document.body.appendChild(s);
+        }).catch(err => {
+            document.getElementById('rezeptDetail').innerHTML =
+                `<p style="text-align:center;color:#c0392b;padding:3rem;">⚠️ Fehler: ${err.message}</p>`;
+        });
+    </script>
 </body>
 </html>

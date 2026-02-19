@@ -187,7 +187,10 @@
                 <p class="subtitle">est. 2018 &middot; Anleitungen & Referenz</p>
             </div>
         </div>
-        <a href="uebersicht.html" class="back-link">← Zurück zur Übersicht</a>
+        <div style="display:flex;justify-content:center;align-items:center;gap:1rem;flex-wrap:wrap;">
+            <a href="uebersicht.html" class="back-link">← Zurück zur Übersicht</a>
+            <a href="anleitung-hinzufuegen.html" class="back-link" style="background:rgba(255,248,220,0.2);">＋ Anleitung hinzufügen</a>
+        </div>
     </header>
 
     <!-- Listenansicht -->
@@ -205,8 +208,10 @@
             window.location.replace('index.html');
         }
     </script>
-    <script src="data-anleitungen.js"></script>
+    <script src="supabase.js"></script>
     <script>
+        let anleitungen = [];
+
         const colLabels = {
             rosa: 'Rosa', vollgar: 'Vollgar / Durch',
             medium: 'Medium', rare: 'Rare', blue: 'Blue Rare',
@@ -301,13 +306,19 @@
             document.getElementById('listView').style.display = 'grid';
         });
 
-        // Start: URL-Parameter prüfen
-        renderListe();
-        const params = new URLSearchParams(window.location.search);
-        const startId = parseInt(params.get('id'));
-        if (startId) {
-            zeigeDetail(startId);
-        }
+        // Start: Anleitungen aus Supabase laden
+        sb.getAll('anleitungen', { order: 'id.asc' }).then(rows => {
+            anleitungen = rows;
+            renderListe();
+            const params = new URLSearchParams(window.location.search);
+            const startId = parseInt(params.get('id'));
+            if (startId) {
+                zeigeDetail(startId);
+            }
+        }).catch(err => {
+            document.getElementById('listView').innerHTML =
+                `<p style="text-align:center;color:#c0392b;padding:3rem;">⚠️ Fehler: ${err.message}</p>`;
+        });
     </script>
 </body>
 </html>

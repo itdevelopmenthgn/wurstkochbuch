@@ -1,4 +1,4 @@
-// Rezept-ID aus URL-Parameter holen
+// Rezept-ID aus URL-Parameter holen (auch für LocalStorage-Keys)
 const urlParams = new URLSearchParams(window.location.search);
 const rezeptId = parseInt(urlParams.get('id')) || 1;
 
@@ -34,7 +34,8 @@ let aktuelleFleischmengen = {};
 let aktuelleZutatenmengen = {};
 
 // Rezept finden und anzeigen
-const rezept = rezepte.find(r => r.id === rezeptId);
+// Rezept aus den von rezept.html async geladenen Daten holen
+const rezept = window.rezepteGeladen ? window.rezepteGeladen[0] : null;
 
 if (!rezept) {
     document.getElementById('rezeptDetail').innerHTML = '<p>Rezept nicht gefunden</p>';
