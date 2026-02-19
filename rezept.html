@@ -19,7 +19,7 @@
     </header>
 
     <main id="rezeptDetail">
-        <!-- Rezeptdetails werden hier dynamisch eingefügt -->
+        <p style="text-align:center;color:#6D4C41;padding:3rem;font-size:1.2rem;">⏳ Rezept wird geladen …</p>
     </main>
 
     <script src="auth.js"></script>
@@ -32,9 +32,7 @@
 
     <script src="supabase.js"></script>
     <script>
-        // Ladeindikator
-        document.getElementById('rezeptDetail').innerHTML =
-            '<p style="text-align:center;color:#6D4C41;padding:3rem;font-size:1.2rem;">⏳ Rezept wird geladen …</p>';
+        // Ladeindikator bereits gesetzt im <main>
 
         // Rezept-ID aus URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -49,19 +47,20 @@
                 return;
             }
 
-            // Globale Variable setzen
+            // Globale Variable für rezept.js
             window.rezepteGeladen = [rowZuRezept(row)];
 
-            // Rezept.js laden
+            // rezept.js dynamisch laden
             const s = document.createElement('script');
             s.src = 'rezept.js';
-            // Init-Funktion aufrufen, sobald Script geladen ist
+            document.body.appendChild(s);
+
+            // Sobald rezept.js geladen ist, initRezept starten (falls vorhanden)
             s.onload = () => {
                 if (typeof initRezept === "function") {
                     initRezept();
                 }
             };
-            document.body.appendChild(s);
         })
         .catch(err => {
             document.getElementById('rezeptDetail').innerHTML =
