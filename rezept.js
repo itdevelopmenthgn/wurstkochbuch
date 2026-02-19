@@ -1,9 +1,10 @@
-const rezept = window.rezepteGeladen ? window.rezepteGeladen[0] : null;
-
-if (rezept) {
-    zeigeRezept(rezept);
-} 
-
+function initRezept() {
+    const rezept = window.rezepteGeladen ? window.rezepteGeladen[0] : null;
+    if (!rezept) {
+        document.getElementById('rezeptDetail').innerHTML = '<p>Rezept nicht gefunden</p>';
+        return;
+    }
+}
 
 // Rezept-ID aus URL-Parameter holen (auch für LocalStorage-Keys)
 const urlParams = new URLSearchParams(window.location.search);
