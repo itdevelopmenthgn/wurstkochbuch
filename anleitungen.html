@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anleitungen – Die Würstelmacher Rezeptbuch</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* ---- Liste ---- */
+        .anleitungen-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .anleitungs-kachel {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.15s;
+            position: relative;
+            overflow: hidden;
+        }
+        .anleitungs-kachel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #5D4037, #8B4513);
+        }
+        .anleitungs-kachel:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+        }
+        .anleitungs-kachel h2 {
+            color: var(--primary-color);
+            margin: 0.5rem 0 0.4rem;
+            font-size: 1.2rem;
+        }
+        .anleitungs-kachel .beschreibung {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-style: italic;
+        }
+        .kategorie-badge {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: #FFF8DC;
+            padding: 0.2rem 0.7rem;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        /* ---- Detail ---- */
+        #detailView {
+            display: none;
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+        .anleitung-karte {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.8rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            border: 2px solid var(--border-color);
+            margin-bottom: 2rem;
+            position: relative;
+        }
+        .anleitung-karte::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #5D4037, #8B4513);
+            border-radius: 8px 8px 0 0;
+        }
+        .anleitung-karte h2 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 1.6rem;
+        }
+        .anleitung-karte .beschreibung {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+        .anleitung-karte .quelle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+        }
+        .anleitung-kategorie-badge {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: #FFF8DC;
+            padding: 0.3rem 0.8rem;
+            border-radius: 5px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+        .tabellen-gruppe {
+            margin-bottom: 1.5rem;
+        }
+        .tabellen-gruppe h3 {
+            color: var(--secondary-color);
+            margin-bottom: 0.8rem;
+            font-size: 1.2rem;
+            border-bottom: 2px solid var(--accent-color);
+            padding-bottom: 0.3rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+        table th {
+            background-color: var(--primary-color);
+            color: #FFF8DC;
+            padding: 0.6rem 0.8rem;
+            text-align: left;
+        }
+        table td {
+            padding: 0.5rem 0.8rem;
+            border-bottom: 1px solid rgba(139, 69, 19, 0.2);
+        }
+        table tr:nth-child(even) {
+            background-color: rgba(139, 69, 19, 0.05);
+        }
+        table tr:hover {
+            background-color: rgba(139, 69, 19, 0.1);
+        }
+        .tipps-box {
+            margin-top: 1rem;
+            padding: 1rem 1.5rem;
+            background-color: #FFFAF0;
+            border-left: 4px solid var(--accent-color);
+            border-radius: 5px;
+            font-size: 0.95rem;
+        }
+        .tipps-box::before {
+            content: "💡 Tipp: ";
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        .text-box {
+            background-color: rgba(139, 69, 19, 0.05);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+        }
+        .text-box h4 {
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+        .back-btn {
+            display: inline-block;
+            margin-bottom: 1.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 1rem;
+            padding: 0;
+        }
+        .back-btn:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <img src="logo.png" alt="Die Würstelmacher seit 2018" class="header-logo">
+            <div class="header-text">
+                <h1>Die Würstelmacher</h1>
+                <p class="subtitle">est. 2018 &middot; Anleitungen & Referenz</p>
+            </div>
+        </div>
+        <a href="uebersicht.html" class="back-link">← Zurück zur Übersicht</a>
+    </header>
+
+    <!-- Listenansicht -->
+    <div id="listView" class="anleitungen-grid"></div>
+
+    <!-- Detailansicht -->
+    <div id="detailView">
+        <button class="back-btn" onclick="zeigeListe()">← Zurück zur Anleitungen-Übersicht</button>
+        <div id="detailInhalt"></div>
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        if (sessionStorage.getItem('wk_auth') !== AUTH_HASH) {
+            window.location.replace('index.html');
+        }
+    </script>
+    <script src="data-anleitungen.js"></script>
+    <script>
+        const colLabels = {
+            rosa: 'Rosa', vollgar: 'Vollgar / Durch',
+            medium: 'Medium', rare: 'Rare', blue: 'Blue Rare',
+            welldone: 'Well Done', antemp: 'Antemp.',
+            temp: 'Temperatur', zeit: 'Zeit'
+        };
+
+        function zeigeDetail(id) {
+            const al = anleitungen.find(a => a.id === id);
+            if (!al) return;
+            history.pushState({ id }, '', '?id=' + id);
+            document.title = al.titel + ' – Anleitungen';
+            renderDetail(al);
+            document.getElementById('listView').style.display = 'none';
+            document.getElementById('detailView').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
+
+        function zeigeListe() {
+            history.pushState({}, '', 'anleitungen.html');
+            document.title = 'Anleitungen – Die Würstelmacher Rezeptbuch';
+            document.getElementById('detailView').style.display = 'none';
+            document.getElementById('listView').style.display = 'grid';
+            window.scrollTo(0, 0);
+        }
+
+        function renderDetail(al) {
+            let inhaltHtml = '';
+            al.inhalt.forEach(gruppe => {
+                inhaltHtml += `<div class="tabellen-gruppe"><h3>${gruppe.gruppe}</h3>`;
+
+                if (gruppe.text) {
+                    inhaltHtml += `<div class="text-box"><p>${gruppe.text}</p></div>`;
+                } else if (gruppe.eintraege && gruppe.eintraege.length > 0) {
+                    const firstEntry = gruppe.eintraege[0];
+                    const cols = Object.keys(firstEntry).filter(k => k !== 'name');
+
+                    inhaltHtml += `<table><thead><tr><th>Bezeichnung</th>`;
+                    cols.forEach(c => { inhaltHtml += `<th>${colLabels[c] || c}</th>`; });
+                    inhaltHtml += `</tr></thead><tbody>`;
+
+                    gruppe.eintraege.forEach(e => {
+                        inhaltHtml += `<tr><td><strong>${e.name}</strong></td>`;
+                        cols.forEach(c => { inhaltHtml += `<td>${e[c] || '–'}</td>`; });
+                        inhaltHtml += `</tr>`;
+                    });
+                    inhaltHtml += `</tbody></table>`;
+                }
+                inhaltHtml += `</div>`;
+            });
+
+            document.getElementById('detailInhalt').innerHTML = `
+                <div class="anleitung-karte">
+                    <span class="anleitung-kategorie-badge">${al.kategorie}</span>
+                    <h2>${al.titel}</h2>
+                    <p class="beschreibung">${al.beschreibung}</p>
+                    <p class="quelle">Quelle: ${al.quelle}</p>
+                    ${inhaltHtml}
+                    ${al.tipps ? `<div class="tipps-box">${al.tipps}</div>` : ''}
+                </div>
+            `;
+        }
+
+        function renderListe() {
+            const grid = document.getElementById('listView');
+            grid.innerHTML = '';
+            anleitungen.forEach(al => {
+                const kachel = document.createElement('div');
+                kachel.className = 'anleitungs-kachel';
+                kachel.onclick = () => zeigeDetail(al.id);
+                kachel.innerHTML = `
+                    <span class="kategorie-badge">${al.kategorie}</span>
+                    <h2>${al.titel}</h2>
+                    <p class="beschreibung">${al.beschreibung}</p>
+                `;
+                grid.appendChild(kachel);
+            });
+        }
+
+        // Browser-Zurück-Button unterstützen
+        window.addEventListener('popstate', (e) => {
+            if (e.state && e.state.id) {
+                const al = anleitungen.find(a => a.id === e.state.id);
+                if (al) {
+                    renderDetail(al);
+                    document.getElementById('listView').style.display = 'none';
+                    document.getElementById('detailView').style.display = 'block';
+                    return;
+                }
+            }
+            document.getElementById('detailView').style.display = 'none';
+            document.getElementById('listView').style.display = 'grid';
+        });
+
+        // Start: URL-Parameter prüfen
+        renderListe();
+        const params = new URLSearchParams(window.location.search);
+        const startId = parseInt(params.get('id'));
+        if (startId) {
+            zeigeDetail(startId);
+        }
+    </script>
+</body>
+</html>

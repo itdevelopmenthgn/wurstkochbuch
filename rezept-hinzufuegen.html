@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rezept hinzufügen – Die Würstelmacher</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .form-container {
+            max-width: 860px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        .form-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 2rem;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .form-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 8px 8px 0 0;
+        }
+
+        .form-card h2 {
+            color: var(--primary-color);
+            font-size: 1.3rem;
+            margin-bottom: 1.2rem;
+            margin-top: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0.5rem;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-row.single {
+            grid-template-columns: 1fr;
+        }
+
+        .form-row.triple {
+            grid-template-columns: 2fr 1fr 1fr;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 0.3rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 0.6rem 0.9rem;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        /* Dynamische Tabellen (Fleischsorten, Zutaten, Gewürze) */
+        .zutaten-tabelle {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0.8rem;
+        }
+
+        .zutaten-tabelle thead th {
+            background: var(--primary-color);
+            color: #FFF8DC;
+            padding: 0.5rem 0.7rem;
+            font-size: 0.9rem;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        .zutaten-tabelle tbody tr:nth-child(even) {
+            background: rgba(139,69,19,0.05);
+        }
+
+        .zutaten-tabelle tbody td {
+            padding: 0.3rem 0.4rem;
+        }
+
+        .zutaten-tabelle tbody td input,
+        .zutaten-tabelle tbody td select {
+            width: 100%;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 0.95rem;
+        }
+
+        .zutaten-tabelle .col-name { width: 55%; }
+        .zutaten-tabelle .col-menge { width: 20%; }
+        .zutaten-tabelle .col-einheit { width: 18%; }
+        .zutaten-tabelle .col-del { width: 7%; text-align: center; }
+
+        .btn-del-row {
+            background: #c0392b;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 0.3rem 0.6rem;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+        }
+
+        .btn-del-row:hover {
+            background: #a93226;
+        }
+
+        .btn-add-row {
+            background: rgba(139,69,19,0.12);
+            color: var(--primary-color);
+            border: 2px dashed var(--border-color);
+            border-radius: 5px;
+            padding: 0.45rem 1rem;
+            cursor: pointer;
+            font-family: Georgia, serif;
+            font-size: 0.95rem;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn-add-row:hover {
+            background: rgba(139,69,19,0.22);
+        }
+
+        /* Schritte */
+        .schritt-gruppe {
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background: rgba(139,69,19,0.03);
+        }
+
+        .schritt-gruppe-header {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .schritt-gruppe-header input {
+            flex: 1;
+            padding: 0.5rem 0.8rem;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .schritt-einzeln {
+            display: grid;
+            grid-template-columns: 1fr 2fr auto;
+            gap: 0.5rem;
+            align-items: start;
+            margin-bottom: 0.5rem;
+        }
+
+        .schritt-einzeln input,
+        .schritt-einzeln textarea {
+            padding: 0.5rem 0.7rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 0.95rem;
+        }
+
+        .schritt-einzeln textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        /* Tipps */
+        .tipp-zeile {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .tipp-zeile input {
+            flex: 1;
+            padding: 0.5rem 0.8rem;
+            border: 2px solid var(--border-color);
+            border-radius: 5px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: Georgia, serif;
+            font-size: 0.95rem;
+        }
+
+        /* Darm */
+        .darm-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .darm-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        #darmFelder {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 1rem;
+            margin-top: 0.8rem;
+        }
+
+        /* Ausgabe-Bereich */
+        #ausgabeBereich {
+            display: none;
+        }
+
+        #ausgabeBereich.sichtbar {
+            display: block;
+        }
+
+        #jsOutput {
+            background: #2a1a0e;
+            color: #f0e6d3;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            padding: 1.5rem;
+            border-radius: 6px;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 500px;
+            overflow-y: auto;
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: #FFF8DC;
+            border: none;
+            border-radius: 6px;
+            padding: 0.8rem 2rem;
+            font-size: 1.1rem;
+            font-family: Georgia, serif;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-color);
+        }
+
+        .btn-secondary {
+            background: rgba(139,69,19,0.12);
+            color: var(--primary-color);
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+            font-family: Georgia, serif;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(139,69,19,0.22);
+        }
+
+        .btn-copy {
+            background: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 0.6rem 1.2rem;
+            font-family: Georgia, serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-copy:hover {
+            background: #33691e;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .info-box {
+            background: rgba(85,139,47,0.12);
+            border: 2px solid var(--success-color);
+            border-radius: 6px;
+            padding: 1rem 1.2rem;
+            margin-bottom: 1rem;
+            color: var(--text-color);
+            font-size: 0.95rem;
+        }
+
+        .hinweis-datei {
+            font-weight: bold;
+            color: var(--success-color);
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+            .form-row.triple { grid-template-columns: 1fr; }
+            .schritt-einzeln { grid-template-columns: 1fr; }
+            #darmFelder { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <img src="logo.png" alt="Die Würstelmacher seit 2018" class="header-logo">
+            <div class="header-text">
+                <h1>Die Würstelmacher</h1>
+                <p class="subtitle">est. 2018 &middot; Rezeptbuch</p>
+            </div>
+        </div>
+        <div style="text-align:center;margin-bottom:1rem;">
+            <a href="uebersicht.html" class="back-link">← Zurück zur Übersicht</a>
+        </div>
+    </header>
+
+    <div class="form-container">
+
+        <!-- REZEPTINFORMATIONEN -->
+        <div class="form-card">
+            <h2>📋 Rezeptinformationen</h2>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fTitel">Rezeptname *</label>
+                    <input type="text" id="fTitel" placeholder="z.B. Hausgemachte Bratwurst">
+                </div>
+                <div class="form-group">
+                    <label for="fKategorie">Kategorie *</label>
+                    <select id="fKategorie">
+                        <option value="">– bitte wählen –</option>
+                        <option>Bratwurst</option>
+                        <option>Brühwurst</option>
+                        <option>Fleischkäse</option>
+                        <option>Rohwurst</option>
+                        <option>Leberwurst</option>
+                        <option>Blutwurst</option>
+                        <option>Schinken</option>
+                        <option>Aspik &amp; Sülze</option>
+                        <option>Wurst im Glas</option>
+                        <option>Salami</option>
+                        <option>Wildwurst</option>
+                        <option>Schmalz &amp; Spezialitäten</option>
+                        <option>Sonstiges</option>
+                        <option>Brot</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="fQuelle">Quelle / Autor</label>
+                    <input type="text" id="fQuelle" placeholder="z.B. Kajo, eigenes Rezept">
+                </div>
+                <div class="form-group">
+                    <label for="fAusgabe">Ausgabe / Ertrag</label>
+                    <input type="text" id="fAusgabe" placeholder="z.B. ca. 10 Würste, 1 Laib">
+                </div>
+            </div>
+            <div class="form-row single">
+                <div class="form-group">
+                    <label for="fBeschreibung">Kurzbeschreibung</label>
+                    <textarea id="fBeschreibung" placeholder="Kurze Beschreibung des Rezepts …"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLEISCHSORTEN -->
+        <div class="form-card">
+            <h2>🥩 Fleischsorten (Basismenge)</h2>
+            <table class="zutaten-tabelle" id="fleischTabelle">
+                <thead>
+                    <tr>
+                        <th class="col-name">Fleischsorte</th>
+                        <th class="col-menge">Menge (g)</th>
+                        <th class="col-einheit">Fettgehalt</th>
+                        <th class="col-del"></th>
+                    </tr>
+                </thead>
+                <tbody id="fleischBody"></tbody>
+            </table>
+            <button class="btn-add-row" onclick="addFleischzeile()">+ Fleischsorte hinzufügen</button>
+        </div>
+
+        <!-- ZUTATEN -->
+        <div class="form-card">
+            <h2>🧂 Zutaten</h2>
+            <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:0.8rem;">Mengen bezogen auf die angegebene Fleisch-Basismenge (oder gesamt bei Brot)</p>
+            <table class="zutaten-tabelle" id="zutatenTabelle">
+                <thead>
+                    <tr>
+                        <th class="col-name">Zutat</th>
+                        <th class="col-menge">Menge</th>
+                        <th class="col-einheit">Einheit</th>
+                        <th class="col-del"></th>
+                    </tr>
+                </thead>
+                <tbody id="zutatenBody"></tbody>
+            </table>
+            <button class="btn-add-row" onclick="addZutatzeile('zutaten')">+ Zutat hinzufügen</button>
+        </div>
+
+        <!-- GEWÜRZE -->
+        <div class="form-card">
+            <h2>🌿 Gewürze</h2>
+            <table class="zutaten-tabelle" id="gewuerzeTabelle">
+                <thead>
+                    <tr>
+                        <th class="col-name">Gewürz</th>
+                        <th class="col-menge">Menge</th>
+                        <th class="col-einheit">Einheit</th>
+                        <th class="col-del"></th>
+                    </tr>
+                </thead>
+                <tbody id="gewuerzeBody"></tbody>
+            </table>
+            <button class="btn-add-row" onclick="addZutatzeile('gewuerze')">+ Gewürz hinzufügen</button>
+        </div>
+
+        <!-- DARM -->
+        <div class="form-card">
+            <h2>🌭 Darm</h2>
+            <label class="darm-toggle">
+                <input type="checkbox" id="darmCheck" onchange="toggleDarm()">
+                &nbsp;Darm wird verwendet
+            </label>
+            <div id="darmFelder" style="display:none;">
+                <div class="form-group">
+                    <label>Typ</label>
+                    <input type="text" id="darmTyp" placeholder="z.B. Schweinedarm, Kunstdarm">
+                </div>
+                <div class="form-group">
+                    <label>Kaliber (mm)</label>
+                    <input type="text" id="darmKaliber" placeholder="z.B. 28/30">
+                </div>
+                <div class="form-group">
+                    <label>Menge</label>
+                    <input type="text" id="darmMenge" placeholder="z.B. nach Bedarf">
+                </div>
+            </div>
+        </div>
+
+        <!-- ZUBEREITUNGSSCHRITTE -->
+        <div class="form-card">
+            <h2>📝 Zubereitungsschritte</h2>
+            <div id="schritteContainer"></div>
+            <button class="btn-add-row" onclick="addSchritteGruppe()">+ Gruppe hinzufügen</button>
+        </div>
+
+        <!-- TIPPS -->
+        <div class="form-card">
+            <h2>💡 Tipps &amp; Tricks</h2>
+            <div id="tippsContainer"></div>
+            <button class="btn-add-row" onclick="addTipp()">+ Tipp hinzufügen</button>
+        </div>
+
+        <!-- AKTIONEN -->
+        <div class="form-actions">
+            <button class="btn-secondary" onclick="formularLeeren()">Formular leeren</button>
+            <button class="btn-primary" onclick="generiereCode()">JS-Code generieren ▶</button>
+        </div>
+
+        <!-- AUSGABE -->
+        <div id="ausgabeBereich" class="form-card" style="margin-top:1.5rem;">
+            <h2>📤 Generierter JS-Code</h2>
+            <div class="info-box">
+                Den Code unten kopieren und in die passende Kategorie-Datei einfügen
+                (z.B. <span class="hinweis-datei" id="hinweisDatei">data-bratwurst.js</span>).
+                Die ID muss eindeutig sein – bitte die nächste freie ID verwenden.
+            </div>
+            <pre id="jsOutput"></pre>
+            <div class="form-actions" style="margin-top:1rem;">
+                <button class="btn-copy" onclick="kopieren()">📋 In Zwischenablage kopieren</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="auth.js"></script>
+    <script>
+        if (sessionStorage.getItem('wk_auth') !== AUTH_HASH) {
+            window.location.replace('index.html');
+        }
+    </script>
+    <script src="data-bratwurst.js"></script>
+    <script src="data-bruehwurst.js"></script>
+    <script src="data-fleischkaese.js"></script>
+    <script src="data-rohwurst.js"></script>
+    <script src="data-leberwurst.js"></script>
+    <script src="data-blutwurst.js"></script>
+    <script src="data-schinken.js"></script>
+    <script src="data-aspik.js"></script>
+    <script src="data-wurst-im-glas.js"></script>
+    <script src="data-salami.js"></script>
+    <script src="data-wildwurst.js"></script>
+    <script src="data-schmalz.js"></script>
+    <script src="data-sonstiges.js"></script>
+    <script src="data-brot.js"></script>
+    <script src="data.js"></script>
+    <script>
+    // ── Einheiten ────────────────────────────────────────────────────────
+    const EINHEITEN = ['g', 'kg', 'ml', 'l', 'EL', 'TL', 'Stk', 'Prise', 'Msp', '%'];
+    const FETT_OPTIONEN = ['', 'mager', 'halbfett', 'fett', 'sehr fett', 'Speck', 'Bauchfleisch'];
+
+    function einheitSelect(selected) {
+        return `<select>${EINHEITEN.map(e => `<option${e===selected?' selected':''}>${e}</option>`).join('')}</select>`;
+    }
+
+    function fettSelect(selected) {
+        return `<select>${FETT_OPTIONEN.map(e => `<option${e===selected?' selected':''}>${e}</option>`).join('')}</select>`;
+    }
+
+    // ── Fleischsorten ────────────────────────────────────────────────────
+    function addFleischzeile(name='', menge='', fett='') {
+        const tbody = document.getElementById('fleischBody');
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="col-name"><input type="text" placeholder="z.B. Schweineschulter" value="${name}"></td>
+            <td class="col-menge"><input type="number" min="0" step="1" placeholder="1000" value="${menge}"></td>
+            <td class="col-einheit">${fettSelect(fett)}</td>
+            <td class="col-del"><button class="btn-del-row" onclick="this.closest('tr').remove()">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    // ── Zutaten / Gewürze ────────────────────────────────────────────────
+    function addZutatzeile(typ, name='', menge='', einheit='g') {
+        const bodyId = typ === 'zutaten' ? 'zutatenBody' : 'gewuerzeBody';
+        const tbody = document.getElementById(bodyId);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="col-name"><input type="text" placeholder="Name" value="${name}"></td>
+            <td class="col-menge"><input type="number" min="0" step="0.1" placeholder="0" value="${menge}"></td>
+            <td class="col-einheit">${einheitSelect(einheit)}</td>
+            <td class="col-del"><button class="btn-del-row" onclick="this.closest('tr').remove()">✕</button></td>
+        `;
+        tbody.appendChild(tr);
+    }
+
+    // ── Darm ─────────────────────────────────────────────────────────────
+    function toggleDarm() {
+        document.getElementById('darmFelder').style.display =
+            document.getElementById('darmCheck').checked ? 'grid' : 'none';
+    }
+
+    // ── Schritte ─────────────────────────────────────────────────────────
+    let gruppenZaehler = 0;
+
+    function addSchritteGruppe(gruppenName='') {
+        gruppenZaehler++;
+        const gid = 'gruppe_' + gruppenZaehler;
+        const container = document.getElementById('schritteContainer');
+        const div = document.createElement('div');
+        div.className = 'schritt-gruppe';
+        div.id = gid;
+        div.innerHTML = `
+            <div class="schritt-gruppe-header">
+                <input type="text" placeholder="Gruppenname (z.B. Vorbereitung, Braten)" value="${gruppenName}" class="gruppen-titel">
+                <button class="btn-del-row" onclick="document.getElementById('${gid}').remove()" title="Gruppe löschen">✕</button>
+            </div>
+            <div class="schritte-liste"></div>
+            <button class="btn-add-row" onclick="addEinzelSchritt('${gid}')">+ Schritt hinzufügen</button>
+        `;
+        container.appendChild(div);
+        addEinzelSchritt(gid);
+    }
+
+    function addEinzelSchritt(gid, titel='', inhalt='') {
+        const liste = document.querySelector('#' + gid + ' .schritte-liste');
+        const div = document.createElement('div');
+        div.className = 'schritt-einzeln';
+        div.innerHTML = `
+            <input type="text" placeholder="Schritttitel (z.B. Fleisch wolfen)" value="${titel}">
+            <textarea placeholder="Beschreibung …">${inhalt}</textarea>
+            <button class="btn-del-row" style="margin-top:0.4rem;" onclick="this.parentElement.remove()" title="Schritt löschen">✕</button>
+        `;
+        liste.appendChild(div);
+    }
+
+    // ── Tipps ─────────────────────────────────────────────────────────────
+    function addTipp(text='') {
+        const container = document.getElementById('tippsContainer');
+        const div = document.createElement('div');
+        div.className = 'tipp-zeile';
+        div.innerHTML = `
+            <input type="text" placeholder="Tipp …" value="${text}">
+            <button class="btn-del-row" onclick="this.parentElement.remove()">✕</button>
+        `;
+        container.appendChild(div);
+    }
+
+    // ── Initialbefüllung ─────────────────────────────────────────────────
+    addFleischzeile();
+    addZutatzeile('zutaten');
+    addZutatzeile('gewuerze');
+    addSchritteGruppe('Zubereitung');
+    addTipp();
+
+    // ── Formular leeren ──────────────────────────────────────────────────
+    function formularLeeren() {
+        if (!confirm('Formular wirklich leeren?')) return;
+        ['fTitel','fKategorie','fQuelle','fAusgabe','fBeschreibung',
+         'darmTyp','darmKaliber','darmMenge'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        document.getElementById('darmCheck').checked = false;
+        document.getElementById('darmFelder').style.display = 'none';
+        document.getElementById('fleischBody').innerHTML = '';
+        document.getElementById('zutatenBody').innerHTML = '';
+        document.getElementById('gewuerzeBody').innerHTML = '';
+        document.getElementById('schritteContainer').innerHTML = '';
+        document.getElementById('tippsContainer').innerHTML = '';
+        document.getElementById('ausgabeBereich').classList.remove('sichtbar');
+        gruppenZaehler = 0;
+        addFleischzeile();
+        addZutatzeile('zutaten');
+        addZutatzeile('gewuerze');
+        addSchritteGruppe('Zubereitung');
+        addTipp();
+    }
+
+    // ── Zeilen auslesen ──────────────────────────────────────────────────
+    function leseTabellenzeilen(bodyId) {
+        const rows = document.querySelectorAll('#' + bodyId + ' tr');
+        const result = [];
+        rows.forEach(tr => {
+            const inputs = tr.querySelectorAll('input, select');
+            if (inputs.length < 2) return;
+            const name = inputs[0].value.trim();
+            if (!name) return;
+            const menge = parseFloat(inputs[1].value) || 0;
+            const einheit = inputs[2] ? inputs[2].value : 'g';
+            result.push({ name, menge, einheit });
+        });
+        return result;
+    }
+
+    function leseFleisch() {
+        const rows = document.querySelectorAll('#fleischBody tr');
+        const result = [];
+        rows.forEach(tr => {
+            const inputs = tr.querySelectorAll('input, select');
+            const name = inputs[0]?.value.trim();
+            if (!name) return;
+            const menge = parseInt(inputs[1]?.value) || 0;
+            const fett = inputs[2]?.value || '';
+            result.push({ name, menge, fettgehalt: fett });
+        });
+        return result;
+    }
+
+    function leseSchritte() {
+        const gruppen = document.querySelectorAll('.schritt-gruppe');
+        const result = [];
+        gruppen.forEach(gDiv => {
+            const gruppenTitel = gDiv.querySelector('.gruppen-titel')?.value.trim() || 'Zubereitung';
+            const schrittDivs = gDiv.querySelectorAll('.schritt-einzeln');
+            const schritte = [];
+            schrittDivs.forEach(sd => {
+                const inputs = sd.querySelectorAll('input, textarea');
+                const titel = inputs[0]?.value.trim();
+                const inhalt = inputs[1]?.value.trim();
+                if (titel || inhalt) {
+                    schritte.push({ titel: titel || '', inhalt: inhalt || '' });
+                }
+            });
+            if (schritte.length > 0) {
+                result.push({ gruppe: gruppenTitel, schritte });
+            }
+        });
+        return result;
+    }
+
+    function leseTipps() {
+        const inputs = document.querySelectorAll('#tippsContainer .tipp-zeile input');
+        return Array.from(inputs).map(i => i.value.trim()).filter(Boolean);
+    }
+
+    // ── Nächste freie ID ermitteln ───────────────────────────────────────
+    function naechsteId() {
+        if (typeof rezepte === 'undefined' || rezepte.length === 0) return 400;
+        return Math.max(...rezepte.map(r => r.id)) + 1;
+    }
+
+    // ── JS-Code generieren ───────────────────────────────────────────────
+    function jsWert(val) {
+        if (typeof val === 'string') {
+            return JSON.stringify(val);
+        }
+        if (typeof val === 'number') return val.toString();
+        if (val === null) return 'null';
+        if (Array.isArray(val)) {
+            if (val.length === 0) return '[]';
+            const items = val.map(item => {
+                if (typeof item === 'string') return '        ' + JSON.stringify(item);
+                if (typeof item === 'object') return formatObj(item, '        ');
+                return '        ' + item;
+            });
+            return '[\n' + items.join(',\n') + '\n    ]';
+        }
+        return JSON.stringify(val);
+    }
+
+    function formatObj(obj, indent) {
+        const lines = Object.entries(obj).map(([k, v]) => {
+            let val;
+            if (typeof v === 'string') val = JSON.stringify(v);
+            else if (typeof v === 'number') val = v.toString();
+            else if (v === null) val = 'null';
+            else if (Array.isArray(v)) {
+                if (v.length === 0) val = '[]';
+                else {
+                    const inner = v.map(item => {
+                        if (typeof item === 'string') return indent + '    ' + JSON.stringify(item);
+                        return indent + '    ' + JSON.stringify(item);
+                    });
+                    val = '[\n' + inner.join(',\n') + '\n' + indent + ']';
+                }
+            }
+            else val = JSON.stringify(v);
+            return indent + '    ' + k + ': ' + val;
+        });
+        return '{\n' + lines.join(',\n') + '\n' + indent + '}';
+    }
+
+    function generiereCode() {
+        const titel = document.getElementById('fTitel').value.trim();
+        const kategorie = document.getElementById('fKategorie').value;
+        if (!titel) { alert('Bitte Rezeptname eingeben.'); return; }
+        if (!kategorie) { alert('Bitte Kategorie wählen.'); return; }
+
+        const id = naechsteId();
+        const fleisch = leseFleisch();
+        const basisGesamt = fleisch.reduce((s, f) => s + (f.menge || 0), 0);
+        const zutaten = leseTabellenzeilen('zutatenBody');
+        const gewuerze = leseTabellenzeilen('gewuerzeBody');
+        const schritte = leseSchritte();
+        const tipps = leseTipps();
+
+        const darmCheck = document.getElementById('darmCheck').checked;
+        let darm = null;
+        if (darmCheck) {
+            darm = {
+                typ: document.getElementById('darmTyp').value.trim() || '',
+                kaliber: document.getElementById('darmKaliber').value.trim() || '',
+                menge: document.getElementById('darmMenge').value.trim() || ''
+            };
+        }
+
+        const rezept = {
+            id,
+            titel,
+            kategorie,
+            beschreibung: document.getElementById('fBeschreibung').value.trim(),
+            quelle: document.getElementById('fQuelle').value.trim(),
+            basisMenge: { gesamt: basisGesamt },
+            fleischsorten: fleisch,
+            zutaten,
+            gewuerze,
+            darm,
+            ausgabe: document.getElementById('fAusgabe').value.trim(),
+            schritte,
+            tipps
+        };
+
+        // Generiere lesbaren JS-Code
+        const lines = [];
+        lines.push('    {');
+        lines.push(`        id: ${rezept.id},`);
+        lines.push(`        titel: ${JSON.stringify(rezept.titel)},`);
+        lines.push(`        kategorie: ${JSON.stringify(rezept.kategorie)},`);
+        lines.push(`        beschreibung: ${JSON.stringify(rezept.beschreibung)},`);
+        lines.push(`        quelle: ${JSON.stringify(rezept.quelle)},`);
+        lines.push(`        basisMenge: { gesamt: ${rezept.basisMenge.gesamt} },`);
+
+        // Fleischsorten
+        if (rezept.fleischsorten.length === 0) {
+            lines.push('        fleischsorten: [],');
+        } else {
+            lines.push('        fleischsorten: [');
+            rezept.fleischsorten.forEach((f, i) => {
+                const comma = i < rezept.fleischsorten.length - 1 ? ',' : '';
+                lines.push(`            { name: ${JSON.stringify(f.name)}, menge: ${f.menge}, fettgehalt: ${JSON.stringify(f.fettgehalt)} }${comma}`);
+            });
+            lines.push('        ],');
+        }
+
+        // Zutaten
+        if (rezept.zutaten.length === 0) {
+            lines.push('        zutaten: [],');
+        } else {
+            lines.push('        zutaten: [');
+            rezept.zutaten.forEach((z, i) => {
+                const comma = i < rezept.zutaten.length - 1 ? ',' : '';
+                lines.push(`            { name: ${JSON.stringify(z.name)}, menge: ${z.menge}, einheit: ${JSON.stringify(z.einheit)} }${comma}`);
+            });
+            lines.push('        ],');
+        }
+
+        // Gewürze
+        if (rezept.gewuerze.length === 0) {
+            lines.push('        gewuerze: [],');
+        } else {
+            lines.push('        gewuerze: [');
+            rezept.gewuerze.forEach((g, i) => {
+                const comma = i < rezept.gewuerze.length - 1 ? ',' : '';
+                lines.push(`            { name: ${JSON.stringify(g.name)}, menge: ${g.menge}, einheit: ${JSON.stringify(g.einheit)} }${comma}`);
+            });
+            lines.push('        ],');
+        }
+
+        // Darm
+        if (rezept.darm === null) {
+            lines.push('        darm: null,');
+        } else {
+            lines.push(`        darm: { typ: ${JSON.stringify(rezept.darm.typ)}, kaliber: ${JSON.stringify(rezept.darm.kaliber)}, menge: ${JSON.stringify(rezept.darm.menge)} },`);
+        }
+
+        lines.push(`        ausgabe: ${JSON.stringify(rezept.ausgabe)},`);
+
+        // Schritte
+        if (rezept.schritte.length === 0) {
+            lines.push('        schritte: [],');
+        } else {
+            lines.push('        schritte: [');
+            rezept.schritte.forEach((sg, gi) => {
+                const gcomma = gi < rezept.schritte.length - 1 ? ',' : '';
+                lines.push('            {');
+                lines.push(`                gruppe: ${JSON.stringify(sg.gruppe)},`);
+                lines.push('                schritte: [');
+                sg.schritte.forEach((s, si) => {
+                    const scomma = si < sg.schritte.length - 1 ? ',' : '';
+                    lines.push(`                    { titel: ${JSON.stringify(s.titel)}, inhalt: ${JSON.stringify(s.inhalt)} }${scomma}`);
+                });
+                lines.push('                ]');
+                lines.push(`            }${gcomma}`);
+            });
+            lines.push('        ],');
+        }
+
+        // Tipps
+        if (rezept.tipps.length === 0) {
+            lines.push('        tipps: []');
+        } else {
+            lines.push('        tipps: [');
+            rezept.tipps.forEach((t, i) => {
+                const comma = i < rezept.tipps.length - 1 ? ',' : '';
+                lines.push(`            ${JSON.stringify(t)}${comma}`);
+            });
+            lines.push('        ]');
+        }
+
+        lines.push('    },');
+
+        const code = lines.join('\n');
+        document.getElementById('jsOutput').textContent = code;
+
+        // Hinweis welche Datei
+        const dateiMap = {
+            'Bratwurst': 'data-bratwurst.js',
+            'Brühwurst': 'data-bruehwurst.js',
+            'Fleischkäse': 'data-fleischkaese.js',
+            'Rohwurst': 'data-rohwurst.js',
+            'Leberwurst': 'data-leberwurst.js',
+            'Blutwurst': 'data-blutwurst.js',
+            'Schinken': 'data-schinken.js',
+            'Aspik & Sülze': 'data-aspik.js',
+            'Wurst im Glas': 'data-wurst-im-glas.js',
+            'Salami': 'data-salami.js',
+            'Wildwurst': 'data-wildwurst.js',
+            'Schmalz & Spezialitäten': 'data-schmalz.js',
+            'Sonstiges': 'data-sonstiges.js',
+            'Brot': 'data-brot.js'
+        };
+        document.getElementById('hinweisDatei').textContent = dateiMap[kategorie] || 'data-sonstiges.js';
+
+        const bereich = document.getElementById('ausgabeBereich');
+        bereich.classList.add('sichtbar');
+        bereich.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ── Kopieren ─────────────────────────────────────────────────────────
+    function kopieren() {
+        const text = document.getElementById('jsOutput').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.querySelector('.btn-copy');
+            const orig = btn.textContent;
+            btn.textContent = '✓ Kopiert!';
+            setTimeout(() => { btn.textContent = orig; }, 2000);
+        }).catch(() => {
+            // Fallback für file://
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            const btn = document.querySelector('.btn-copy');
+            const orig = btn.textContent;
+            btn.textContent = '✓ Kopiert!';
+            setTimeout(() => { btn.textContent = orig; }, 2000);
+        });
+    }
+    </script>
+</body>
+</html>

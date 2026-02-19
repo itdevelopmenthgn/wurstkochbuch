@@ -89,10 +89,10 @@ function zeigeRezept(rezept) {
     const erledigteSchritte = Object.values(schrittStatus).filter(s => s.completed).length;
     const fortschrittProzent = gesamtSchritte > 0 ? Math.round((erledigteSchritte / gesamtSchritte) * 100) : 0;
 
-    // Skalierungsfaktor berechnen
+    // Skalierungsfaktor berechnen (1.0 wenn kein Fleisch vorhanden)
     const originalGesamt = rezept.basisMenge.gesamt;
     const aktuellesGesamt = Object.values(aktuelleFleischmengen).reduce((sum, m) => sum + m, 0);
-    const faktor = aktuellesGesamt / originalGesamt;
+    const faktor = (originalGesamt > 0 && aktuellesGesamt > 0) ? aktuellesGesamt / originalGesamt : 1;
 
     let html = `
         <h1>${rezept.titel}</h1>
@@ -155,7 +155,7 @@ function zeigeRezept(rezept) {
     }
 
     // Darm-Info
-    if (rezept.darm) {
+    if (rezept.darm && rezept.darm.typ) {
         html += '<div class="zutaten-section"><h2>🔗 Darm / Verpackung</h2>';
         html += '<div class="zutaten-kategorie"><ul>';
         html += `<li><strong>Typ:</strong> ${rezept.darm.typ}</li>`;
@@ -356,7 +356,7 @@ function aendereZutatenmenge(zutatKey, delta) {
 function updateAlleWerte() {
     const originalGesamt = rezept.basisMenge.gesamt;
     const aktuellesGesamt = Object.values(aktuelleFleischmengen).reduce((sum, m) => sum + m, 0);
-    const faktor = aktuellesGesamt / originalGesamt;
+    const faktor = (originalGesamt > 0 && aktuellesGesamt > 0) ? aktuellesGesamt / originalGesamt : 1;
 
     // Fleischsorten-Anzeige aktualisieren
     const fleischContainer = document.querySelectorAll('.zutaten-section')[0];

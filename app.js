@@ -1,5 +1,6 @@
 // Aktuelle Kategorie
 let aktuelleKategorie = 'Alle';
+let aktuelleSuche = '';
 
 // Kategorien aus den Rezeptdaten ermitteln (Reihenfolge festlegen)
 const kategorienReihenfolge = [
@@ -13,7 +14,10 @@ const kategorienReihenfolge = [
     'Aspik & Sülze',
     'Wurst im Glas',
     'Salami',
-    'Sonstiges'
+    'Wildwurst',
+    'Schmalz & Spezialitäten',
+    'Sonstiges',
+    'Brot'
 ];
 
 function getVorhandeneKategorien() {
@@ -51,15 +55,37 @@ function bauNavigationAuf() {
     });
 }
 
+function sucheRezepte(query) {
+    const q = query.toLowerCase().trim();
+    if (!q) return null; // null = kein Filter
+    return rezepte.filter(r => {
+        if (r.titel.toLowerCase().includes(q)) return true;
+        if (r.beschreibung && r.beschreibung.toLowerCase().includes(q)) return true;
+        if (r.kategorie.toLowerCase().includes(q)) return true;
+        if (r.fleischsorten && r.fleischsorten.some(f => f.name.toLowerCase().includes(q))) return true;
+        if (r.zutaten && r.zutaten.some(z => z.name.toLowerCase().includes(q))) return true;
+        if (r.gewuerze && r.gewuerze.some(g => g.name.toLowerCase().includes(q))) return true;
+        return false;
+    });
+}
+
 // Rezepte anzeigen
 function zeigeRezepte(kategorie = 'Alle') {
     const container = document.getElementById('rezeptListe');
     container.innerHTML = '';
     container.className = 'rezept-grid';
 
-    const gefilterteRezepte = kategorie === 'Alle'
-        ? rezepte
-        : rezepte.filter(r => r.kategorie === kategorie);
+    let gefilterteRezepte;
+    if (aktuelleSuche) {
+        gefilterteRezepte = sucheRezepte(aktuelleSuche);
+        if (kategorie !== 'Alle') {
+            gefilterteRezepte = gefilterteRezepte.filter(r => r.kategorie === kategorie);
+        }
+    } else {
+        gefilterteRezepte = kategorie === 'Alle'
+            ? rezepte
+            : rezepte.filter(r => r.kategorie === kategorie);
+    }
 
     if (gefilterteRezepte.length === 0) {
         container.innerHTML = '<p style="text-align:center;color:#6D4C41;padding:2rem;font-size:1.2rem;">Keine Rezepte in dieser Kategorie vorhanden.</p>';
@@ -73,10 +99,12 @@ function zeigeRezepte(kategorie = 'Alle') {
             window.location.href = `rezept.html?id=${rezept.id}`;
         };
 
-        const gesamtFleisch = rezept.fleischsorten.reduce((sum, f) => sum + f.menge, 0);
-        const fleischText = gesamtFleisch >= 1000
-            ? `${(gesamtFleisch / 1000).toFixed(1).replace('.', ',')} kg Fleisch`
-            : `${gesamtFleisch} g Fleisch`;
+        const gesamtFleisch = rezept.fleischsorten.reduce((sum, f) => sum + (f.menge || 0), 0);
+        const fleischText = gesamtFleisch === 0
+            ? ''
+            : gesamtFleisch >= 1000
+                ? `${(gesamtFleisch / 1000).toFixed(1).replace('.', ',')} kg Fleisch`
+                : `${gesamtFleisch} g Fleisch`;
 
         const ausgabeText = rezept.ausgabe ? `📊 ${rezept.ausgabe}` : '';
 
@@ -85,7 +113,7 @@ function zeigeRezepte(kategorie = 'Alle') {
             <p>${rezept.beschreibung}</p>
             <span class="kategorie">${rezept.kategorie}</span>
             <div class="meta">
-                <span>🥩 ${fleischText}</span>
+                ${fleischText ? `<span>🥩 ${fleischText}</span>` : ''}
                 ${ausgabeText ? `<span>${ausgabeText}</span>` : ''}
             </div>
         `;
@@ -105,6 +133,17 @@ document.getElementById('showAll')?.addEventListener('click', () => {
     aktuelleKategorie = 'Alle';
     zeigeRezepte('Alle');
     updateActiveButton('showAll');
+});
+
+// Suchfeld
+document.getElementById('suchfeld')?.addEventListener('input', (e) => {
+    aktuelleSuche = e.target.value;
+    if (aktuelleSuche) {
+        // Kategorie-Filter aufheben bei Suche
+        aktuelleKategorie = 'Alle';
+        updateActiveButton('showAll');
+    }
+    zeigeRezepte(aktuelleKategorie);
 });
 
 // Start

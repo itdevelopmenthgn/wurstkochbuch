@@ -3,22 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rezept - Wurstmacher Kochbuch</title>
+    <title>Rezept – Die Würstelmacher Rezeptbuch</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
         <div class="header-content">
-            <h1>🥩 Wurstmacher Kochbuch</h1>
-            <p class="subtitle">Wurst mit Liebe gemacht</p>
+            <img src="logo.png" alt="Die Würstelmacher seit 2018" class="header-logo">
+            <div class="header-text">
+                <h1>Die Würstelmacher</h1>
+                <p class="subtitle">est. 2018 &middot; Rezeptbuch</p>
+            </div>
         </div>
-        <a href="index.html" class="back-link">← Zurück zur Übersicht</a>
+        <a href="uebersicht.html" class="back-link">← Zurück zur Übersicht</a>
     </header>
 
     <main id="rezeptDetail">
         <!-- Rezeptdetails werden hier dynamisch eingefügt -->
     </main>
 
+    <script src="auth.js"></script>
+    <script>
+        if (sessionStorage.getItem('wk_auth') !== AUTH_HASH) {
+            window.location.replace('index.html');
+        }
+    </script>
+    <script src="data-bratwurst.js"></script>
+    <script src="data-bruehwurst.js"></script>
+    <script src="data-fleischkaese.js"></script>
+    <script src="data-rohwurst.js"></script>
+    <script src="data-leberwurst.js"></script>
+    <script src="data-blutwurst.js"></script>
+    <script src="data-schinken.js"></script>
+    <script src="data-aspik.js"></script>
+    <script src="data-wurst-im-glas.js"></script>
+    <script src="data-salami.js"></script>
+    <script src="data-wildwurst.js"></script>
+    <script src="data-schmalz.js"></script>
+    <script src="data-sonstiges.js"></script>
+    <script src="data-brot.js"></script>
     <script src="data.js"></script>
     <script src="rezept.js"></script>
 </body>

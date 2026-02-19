@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Die Würstelmacher – Rezeptbuch</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <img src="logo.png" alt="Die Würstelmacher seit 2018" class="header-logo">
+            <div class="header-text">
+                <h1>Die Würstelmacher</h1>
+                <p class="subtitle">est. 2018 &middot; Rezeptbuch</p>
+            </div>
+        </div>
+        <div class="suche-container" style="display:flex;align-items:center;justify-content:center;gap:0.8rem;">
+            <input type="search" id="suchfeld" placeholder="Rezept, Zutat oder Gewürz suchen …" autocomplete="off">
+            <a href="rezept-hinzufuegen.html" style="
+                display:inline-block;
+                background:rgba(255,248,220,0.2);
+                color:#FFF8DC;
+                border:2px solid #FFF8DC;
+                border-radius:25px;
+                padding:0.6rem 1.2rem;
+                font-family:Georgia,serif;
+                font-size:1rem;
+                white-space:nowrap;
+                text-decoration:none;
+                transition:background 0.2s;
+                flex-shrink:0;
+            " onmouseover="this.style.background='rgba(210,105,30,0.8)'" onmouseout="this.style.background='rgba(255,248,220,0.2)'">＋ Rezept hinzufügen</a>
+        </div>
+        <nav>
+            <button id="showAll" class="active">Alle Rezepte</button>
+            <!-- Weitere Kategorie-Buttons werden dynamisch durch app.js eingefügt -->
+            <button id="showAnleitungen" onclick="window.location.href='anleitungen.html'" style="background-color:rgba(255,248,220,0.15);margin-left:1rem;">📋 Anleitungen</button>
+        </nav>
+    </header>
+
+    <main id="rezeptListe">
+        <!-- Rezepte werden hier dynamisch eingefügt -->
+    </main>
+
+    <script src="auth.js"></script>
+    <script>
+        if (sessionStorage.getItem('wk_auth') !== AUTH_HASH) {
+            window.location.replace('index.html');
+        }
+    </script>
+    <script src="data-bratwurst.js"></script>
+    <script src="data-bruehwurst.js"></script>
+    <script src="data-fleischkaese.js"></script>
+    <script src="data-rohwurst.js"></script>
+    <script src="data-leberwurst.js"></script>
+    <script src="data-blutwurst.js"></script>
+    <script src="data-schinken.js"></script>
+    <script src="data-aspik.js"></script>
+    <script src="data-wurst-im-glas.js"></script>
+    <script src="data-salami.js"></script>
+    <script src="data-wildwurst.js"></script>
+    <script src="data-schmalz.js"></script>
+    <script src="data-sonstiges.js"></script>
+    <script src="data-brot.js"></script>
+    <script src="data-anleitungen.js"></script>
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

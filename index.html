@@ -3,26 +3,214 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wurst mit Liebe gemacht 🌭</title>
+    <title>Die Würstelmacher – Rezeptbuch</title>
     <link rel="stylesheet" href="styles.css">
+    <style>
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+            padding: 2rem;
+        }
+        .login-box {
+            background-color: var(--card-bg);
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            padding: 2.5rem 3rem;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+            max-width: 400px;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .login-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: linear-gradient(90deg, #5D4037, #8B4513);
+        }
+        .login-box h2 {
+            color: var(--primary-color);
+            margin-bottom: 0.3rem;
+            margin-top: 0.5rem;
+            text-align: center;
+        }
+        .login-box p {
+            color: var(--text-muted);
+            text-align: center;
+            margin-bottom: 1.8rem;
+            font-style: italic;
+        }
+        .login-box label {
+            display: block;
+            color: var(--primary-color);
+            font-weight: bold;
+            margin-bottom: 0.4rem;
+        }
+        .login-box input[type="password"] {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1.1rem;
+            background: var(--bg-color);
+            color: var(--text-color);
+            box-sizing: border-box;
+            margin-bottom: 1.2rem;
+        }
+        .login-box input[type="password"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 0.8rem;
+            background-color: var(--primary-color);
+            color: #FFF8DC;
+            border: none;
+            border-radius: 6px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .login-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        .login-error {
+            color: #c0392b;
+            text-align: center;
+            margin-top: 0.8rem;
+            font-weight: bold;
+            min-height: 1.4rem;
+        }
+    </style>
 </head>
 <body>
     <header>
         <div class="header-content">
-            <h1>🥩 Wurstmacher Kochbuch</h1>
-            <p class="subtitle">Wurst mit Liebe gemacht</p>
+            <img src="logo.png" alt="Die Würstelmacher seit 2018" class="header-logo">
+            <div class="header-text">
+                <h1>Die Würstelmacher</h1>
+                <p class="subtitle">est. 2018 &middot; Rezeptbuch</p>
+            </div>
         </div>
-        <nav>
-            <button id="showAll" class="active">Alle Rezepte</button>
-            <!-- Weitere Kategorie-Buttons werden dynamisch durch app.js eingefügt -->
-        </nav>
     </header>
 
-    <main id="rezeptListe">
-        <!-- Rezepte werden hier dynamisch eingefügt -->
+    <main>
+        <div class="login-container">
+            <div class="login-box">
+                <h2>🔐 Zugang</h2>
+                <p>Bitte Passwort eingeben</p>
+                <label for="pwInput">Passwort</label>
+                <input type="password" id="pwInput" placeholder="••••••••••••" autocomplete="current-password">
+                <button class="login-btn" onclick="pruefePasswort()">Einloggen</button>
+                <p class="login-error" id="loginFehler"></p>
+            </div>
+        </div>
     </main>
 
-    <script src="data.js"></script>
-    <script src="app.js"></script>
+    <script src="auth.js"></script>
+    <!-- SHA-256 pure JS (funktioniert auch ohne HTTPS / file://) -->
+    <script>
+    function sha256(str) {
+        function rightRotate(value, amount) {
+            return (value >>> amount) | (value << (32 - amount));
+        }
+        var mathPow = Math.pow;
+        var maxWord = mathPow(2, 32);
+        var i, j;
+        var result = '';
+        var words = [];
+        var asciiBitLength = str.length * 8;
+        var hash = [];
+        var k = [];
+        var primeCounter = 0;
+        var isComposite = {};
+        for (var candidate = 2; primeCounter < 64; candidate++) {
+            if (!isComposite[candidate]) {
+                for (i = 0; i < 313; i += candidate) isComposite[i] = candidate;
+                hash[primeCounter] = (mathPow(candidate, 0.5) * maxWord) | 0;
+                k[primeCounter++] = (mathPow(candidate, 1/3) * maxWord) | 0;
+            }
+        }
+        str += '\x80';
+        while (str.length % 64 - 56) str += '\x00';
+        for (i = 0; i < str.length; i++) {
+            j = str.charCodeAt(i);
+            if (j >> 8) return;
+            words[i >> 2] |= j << ((3 - i) % 4) * 8;
+        }
+        words[words.length] = ((asciiBitLength / maxWord) | 0);
+        words[words.length] = (asciiBitLength | 0);
+        for (j = 0; j < words.length;) {
+            var w = words.slice(j, j += 16);
+            var oldHash = hash.slice(0);
+            for (i = 0; i < 64; i++) {
+                var i2 = i + j - 16;
+                var w15 = w[i - 15], w2 = w[i - 2];
+                var a = hash[0], e = hash[4];
+                var temp1 = hash[7]
+                    + (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25))
+                    + ((e & hash[5]) ^ (~e & hash[6]))
+                    + k[i]
+                    + (w[i] = (i < 16) ? w[i] : (
+                        w[i - 16]
+                        + (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3))
+                        + w[i - 7]
+                        + (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))
+                    ) | 0);
+                var temp2 = (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22))
+                    + ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
+                hash = [(temp1 + temp2) | 0].concat(hash);
+                hash[4] = (hash[4] + temp1) | 0;
+                hash.length = 8;
+            }
+            hash = hash.map(function(v, i) { return (v + oldHash[i]) | 0; });
+        }
+        for (i = 0; i < 8; i++) {
+            for (j = 3; j + 1; j--) {
+                var b = (hash[i] >> (j * 8)) & 255;
+                result += ((b < 16) ? '0' : '') + b.toString(16);
+            }
+        }
+        return result;
+    }
+    </script>
+    <script>
+        // Bereits eingeloggt?
+        if (sessionStorage.getItem('wk_auth') === AUTH_HASH) {
+            window.location.replace('uebersicht.html');
+        }
+
+        document.getElementById('pwInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') pruefePasswort();
+        });
+
+        function pruefePasswort() {
+            const pw = document.getElementById('pwInput').value;
+            const fehler = document.getElementById('loginFehler');
+            fehler.textContent = '';
+
+            if (!pw) {
+                fehler.textContent = 'Bitte Passwort eingeben.';
+                return;
+            }
+
+            const hashHex = sha256(pw);
+
+            if (hashHex === AUTH_HASH) {
+                sessionStorage.setItem('wk_auth', AUTH_HASH);
+                window.location.replace('uebersicht.html');
+            } else {
+                fehler.textContent = 'Falsches Passwort.';
+                document.getElementById('pwInput').value = '';
+                document.getElementById('pwInput').focus();
+            }
+        }
+    </script>
 </body>
 </html>
