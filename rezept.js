@@ -71,22 +71,7 @@ function initRezept() {
     zeigeRezept(rezept);
 }
 
-// =====================
-// Rezept initial starten
-// =====================
-window.addEventListener('load', () => {
-    if (window.rezepteGeladen) {
-        initRezept();
-    } else {
-        // Falls asynchron geladen, regelmäßig prüfen
-        const checkInterval = setInterval(() => {
-            if (window.rezepteGeladen) {
-                clearInterval(checkInterval);
-                initRezept();
-            }
-        }, 100);
-    }
-});
+// initRezept wird von rezept.html via s.onload aufgerufen, nachdem die Daten geladen wurden.
 
 // =====================
 // Rezept anzeigen
