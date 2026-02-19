@@ -20,7 +20,6 @@
 
     <main id="rezeptDetail">
         <!-- Rezeptdetails werden hier dynamisch eingefügt -->
-        <p style="text-align:center;color:#6D4C41;padding:3rem;font-size:1.2rem;">⏳ Rezept wird geladen …</p>
     </main>
 
     <script src="auth.js"></script>
@@ -32,28 +31,39 @@
     </script>
 
     <script src="supabase.js"></script>
-    <script src="rezept.js" defer></script>
     <script>
-        // Rezept-ID aus URL-Parameter
+        // Ladeindikator
+        document.getElementById('rezeptDetail').innerHTML =
+            '<p style="text-align:center;color:#6D4C41;padding:3rem;font-size:1.2rem;">⏳ Rezept wird geladen …</p>';
+
+        // Rezept-ID aus URL
         const urlParams = new URLSearchParams(window.location.search);
         const rezeptId = parseInt(urlParams.get('id')) || 1;
 
-        // Rezeptdaten laden
-        sb.getById('rezepte', rezeptId).then(row => {
+        // Supabase: Rezept laden
+        sb.getById('rezepte', rezeptId)
+          .then(row => {
             if (!row) {
                 document.getElementById('rezeptDetail').innerHTML =
                     '<p style="text-align:center;color:#c0392b;padding:3rem;">Rezept nicht gefunden.</p>';
                 return;
             }
 
-            // Globale Variable bereitstellen
+            // Globale Variable setzen
             window.rezepteGeladen = [rowZuRezept(row)];
 
-            // Initialisierung in rezept.js starten
-            if (typeof initRezept === "function") {
-                initRezept();
-            }
-        }).catch(err => {
+            // Rezept.js laden
+            const s = document.createElement('script');
+            s.src = 'rezept.js';
+            // Init-Funktion aufrufen, sobald Script geladen ist
+            s.onload = () => {
+                if (typeof initRezept === "function") {
+                    initRezept();
+                }
+            };
+            document.body.appendChild(s);
+        })
+        .catch(err => {
             document.getElementById('rezeptDetail').innerHTML =
                 `<p style="text-align:center;color:#c0392b;padding:3rem;">⚠️ Fehler: ${err.message}</p>`;
         });
